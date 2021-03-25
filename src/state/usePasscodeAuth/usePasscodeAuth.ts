@@ -8,6 +8,17 @@ export function getPasscode() {
   return passcode;
 }
 
+export function getRoomName() {
+  const match = window.location.search.match(/roomname=(.*)&?/);
+  const roomname = match ? match[1] : window.sessionStorage.getItem('passcode');
+  return roomname;
+}
+
+export function getUserName() {
+  const match = window.location.search.match(/username=(.*)&?/);
+  const username = match ? match[1] : window.sessionStorage.getItem('passcode');
+  return username;
+}
 export function fetchToken(name: string, room: string, passcode: string, create_room = true) {
   return fetch(`/token`, {
     method: 'POST',

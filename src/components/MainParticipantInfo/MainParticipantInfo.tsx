@@ -2,7 +2,7 @@ import React from 'react';
 import clsx from 'clsx';
 import { makeStyles, Theme } from '@material-ui/core/styles';
 import { LocalAudioTrack, LocalVideoTrack, Participant, RemoteAudioTrack, RemoteVideoTrack } from 'twilio-video';
-
+import Countdown from 'react-countdown';
 import AvatarIcon from '../../icons/AvatarIcon';
 import Typography from '@material-ui/core/Typography';
 
@@ -108,11 +108,13 @@ export default function MainParticipantInfo({ participant, children }: MainParti
     >
       <div className={classes.infoContainer}>
         <div className={classes.identity}>
+          <img width="50px" height="50px" src="../../coffeeBreak.png"></img>
           <AudioLevelIndicator audioTrack={audioTrack} />
           <Typography variant="body1" color="inherit">
             {participant.identity}
-            {isLocal && ' (You)'}
+            {isLocal && ' (You)' + ' | Remaining time: '}
             {screenSharePublication && ' - Screen'}
+            <Countdown date={Date.now() + 900000} />
           </Typography>
         </div>
       </div>

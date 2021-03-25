@@ -5,6 +5,7 @@ const participants = {};
 // the project's config changing).
 // `on` is used to hook into various events Cypress emits
 // `config` is the resolved Cypress config
+
 module.exports = (on, config) => {
   const participantFunctions = {
     addParticipant: async ({ name, roomName, color }) => {
