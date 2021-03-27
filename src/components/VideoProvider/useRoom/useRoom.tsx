@@ -2,6 +2,7 @@ import { Callback } from '../../../types';
 import { isMobile } from '../../../utils';
 import Video, { ConnectOptions, LocalTrack, Room } from 'twilio-video';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import ReactCanvasConfetti, { IProps } from 'react-canvas-confetti';
 
 // @ts-ignore
 window.TwilioVideo = Video;
@@ -31,24 +32,6 @@ export default function useRoom(localTracks: LocalTrack[], onError: Callback, op
           // This app can add up to 13 'participantDisconnected' listeners to the room object, which can trigger
           // a warning from the EventEmitter object. Here we increase the max listeners to suppress the warning.
           newRoom.setMaxListeners(2);
-
-          class Timer {
-            constructor(public counter = 10) {
-              let intervalId = setInterval(() => {
-                this.counter = this.counter - 1;
-
-                if (this.counter === 0) {
-                  console.log('times up!');
-                  newRoom.disconnect();
-                  console.log('bye bye!');
-                  clearInterval(intervalId);
-                }
-              }, 1000);
-            }
-          }
-
-          const timer = new Timer(900); //15 min
-          console.log(timer.counter);
 
           newRoom.once('disconnected', () => {
             // Reset the room only after all other `disconnected` listeners have been called.

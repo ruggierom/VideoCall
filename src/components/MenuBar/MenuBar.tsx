@@ -80,9 +80,7 @@ export default function MenuBar() {
       <footer className={classes.container}>
         <Grid container justify="space-around" alignItems="center">
           <Hidden smDown>
-            <Grid style={{ flex: 1 }}>
-              <Typography variant="body1">{room!.name}</Typography>
-            </Grid>
+            <Grid style={{ flex: 1 }}></Grid>
           </Hidden>
           <Grid item>
             <Grid container justify="center">

@@ -2,7 +2,6 @@ import React from 'react';
 import clsx from 'clsx';
 import { makeStyles, Theme } from '@material-ui/core/styles';
 import { LocalAudioTrack, LocalVideoTrack, Participant, RemoteAudioTrack, RemoteVideoTrack } from 'twilio-video';
-import Countdown from 'react-countdown';
 import AvatarIcon from '../../icons/AvatarIcon';
 import Typography from '@material-ui/core/Typography';
 
@@ -13,6 +12,16 @@ import useTrack from '../../hooks/useTrack/useTrack';
 import useVideoContext from '../../hooks/useVideoContext/useVideoContext';
 import useParticipantIsReconnecting from '../../hooks/useParticipantIsReconnecting/useParticipantIsReconnecting';
 import AudioLevelIndicator from '../AudioLevelIndicator/AudioLevelIndicator';
+import Countdown, { zeroPad, CountdownRenderProps } from 'react-countdown';
+import ControlledCountdown from '../ControlledCountdown/ControlledCountdown';
+import CountdownApi from '../ControlledCountdown/CountdownApi';
+import Room from '../Room/Room';
+
+const Text = require('react-text');
+
+// Random component
+const Completionist = () => <span>Disconnecting</span>;
+const TwoMinWarning = () => <span>Only 2 minutes left!</span>;
 
 const useStyles = makeStyles((theme: Theme) => ({
   container: {
@@ -79,6 +88,7 @@ interface MainParticipantInfoProps {
 export default function MainParticipantInfo({ participant, children }: MainParticipantInfoProps) {
   const classes = useStyles();
   const { room } = useVideoContext();
+
   const localParticipant = room!.localParticipant;
   const isLocal = localParticipant === participant;
 
@@ -98,6 +108,31 @@ export default function MainParticipantInfo({ participant, children }: MainParti
   const isVideoSwitchedOff = useIsTrackSwitchedOff(videoTrack as LocalVideoTrack | RemoteVideoTrack);
   const isParticipantReconnecting = useParticipantIsReconnecting(participant);
 
+  // Renderer callback with condition
+  const renderer = ({ hours, minutes, seconds, completed }: CountdownRenderProps) => {
+    if (minutes <= 2) {
+      return (
+        <span>
+          {hours}:{minutes}:{seconds}
+          <p></p>
+          <TwoMinWarning />
+        </span>
+      );
+    }
+
+    if (completed) {
+      room?.disconnect();
+      return <Completionist />;
+    }
+
+    // Render a countdown
+    return (
+      <span>
+        {hours}:{minutes}:{seconds}
+      </span>
+    );
+  };
+
   return (
     <div
       data-cy-main-participant
@@ -112,9 +147,11 @@ export default function MainParticipantInfo({ participant, children }: MainParti
           <AudioLevelIndicator audioTrack={audioTrack} />
           <Typography variant="body1" color="inherit">
             {participant.identity}
-            {isLocal && ' (You)' + ' | Remaining time: '}
-            {screenSharePublication && ' - Screen'}
-            <Countdown date={Date.now() + 900000} />
+
+            {isLocal && ' (You)'}
+            <pre style={{ fontFamily: 'inherit', marginTop: '.25em', marginBottom: '.75em' }}>
+              Remaining time: <Countdown date={Date.now() + 900000} zeroPadTime={0} renderer={renderer} />
+            </pre>
           </Typography>
         </div>
       </div>
