@@ -18,12 +18,33 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 );
 
+const asyncLocalStorage = {
+  setItem: function(key: string, value: string) {
+    return Promise.resolve().then(function() {
+      localStorage.setItem(key, value);
+    });
+  },
+  getItem: function(key: string) {
+    return Promise.resolve().then(function() {
+      return localStorage.getItem(key);
+    });
+  },
+};
+
 export default function EndCallButton(props: { className?: string }) {
   const classes = useStyles();
   const { room } = useVideoContext();
 
   return (
-    <Button onClick={() => room!.disconnect()} className={clsx(classes.button, props.className)} data-cy-disconnect>
+    <Button
+      onClick={() => {
+        var x = Number(asyncLocalStorage.getItem('startTime'));
+        asyncLocalStorage.setItem('startTime', '');
+        room!.disconnect();
+      }}
+      className={clsx(classes.button, props.className)}
+      data-cy-disconnect
+    >
       Disconnect
     </Button>
   );

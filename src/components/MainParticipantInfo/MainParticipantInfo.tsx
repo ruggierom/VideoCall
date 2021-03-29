@@ -1,7 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 import { makeStyles, Theme } from '@material-ui/core/styles';
-import { LocalAudioTrack, LocalVideoTrack, Participant, RemoteAudioTrack, RemoteVideoTrack } from 'twilio-video';
+import { LocalAudioTrack, LocalVideoTrack, Participant, RemoteAudioTrack, RemoteVideoTrack, Room } from 'twilio-video';
 import AvatarIcon from '../../icons/AvatarIcon';
 import Typography from '@material-ui/core/Typography';
 
@@ -15,13 +15,17 @@ import AudioLevelIndicator from '../AudioLevelIndicator/AudioLevelIndicator';
 import Countdown, { zeroPad, CountdownRenderProps } from 'react-countdown';
 import ControlledCountdown from '../ControlledCountdown/ControlledCountdown';
 import CountdownApi from '../ControlledCountdown/CountdownApi';
-import Room from '../Room/Room';
+import { now } from 'd3-timer';
+import { connected, disconnect } from 'process';
+import { start } from 'repl';
 
 const Text = require('react-text');
-
+const meetingDuration = 900000;
 // Random component
 const Completionist = () => <span>Disconnecting</span>;
 const TwoMinWarning = () => <span>Only 2 minutes left!</span>;
+const MeetingNotStarted = () => <span>Meeting not yet started</span>;
+var meetingStarted = false;
 
 const useStyles = makeStyles((theme: Theme) => ({
   container: {
@@ -32,7 +36,7 @@ const useStyles = makeStyles((theme: Theme) => ({
   identity: {
     background: 'rgba(0, 0, 0, 0.5)',
     color: 'white',
-    padding: '0.1em 0.3em 0.1em 0',
+    padding: '0.1em 1em .1em 0',
     fontSize: '1.2em',
     display: 'inline-flex',
     '& svg': {
@@ -86,10 +90,17 @@ interface MainParticipantInfoProps {
 }
 
 export default function MainParticipantInfo({ participant, children }: MainParticipantInfoProps) {
+  const countDown = React.createRef();
   const classes = useStyles();
   const { room } = useVideoContext();
-
   const localParticipant = room!.localParticipant;
+
+  var startTime = Number(window.localStorage.getItem('startTime'));
+  setStartTime();
+
+  if (room?.participants.size === 1 && room.localParticipant) {
+    meetingStarted = true;
+  }
   const isLocal = localParticipant === participant;
 
   const screenShareParticipant = useScreenShareParticipant();
@@ -97,6 +108,7 @@ export default function MainParticipantInfo({ participant, children }: MainParti
 
   const publications = usePublications(participant);
   const videoPublication = publications.find(p => p.trackName.includes('camera'));
+
   const screenSharePublication = publications.find(p => p.trackName.includes('screen'));
 
   const videoTrack = useTrack(screenSharePublication || videoPublication);
@@ -108,9 +120,50 @@ export default function MainParticipantInfo({ participant, children }: MainParti
   const isVideoSwitchedOff = useIsTrackSwitchedOff(videoTrack as LocalVideoTrack | RemoteVideoTrack);
   const isParticipantReconnecting = useParticipantIsReconnecting(participant);
 
+  function setStartTime() {
+    if (startTime === 0) {
+      if (room?.participants.size === 1 && room.localParticipant) {
+        startTime = Date.now();
+        window.localStorage.setItem('startTime', String(startTime));
+        meetingStarted = true;
+      } else {
+        startTime = 0;
+        window.localStorage.setItem('startTime', '');
+        meetingStarted = false;
+      }
+    }
+
+    //meeting should be over by now so blank out start time
+    //30 min
+    //Posssible startTime did not get reset
+    if (Date.now() > startTime + meetingDuration) {
+      //startTime = 0;
+    }
+  }
+
   // Renderer callback with condition
-  const renderer = ({ hours, minutes, seconds, completed }: CountdownRenderProps) => {
-    if (minutes <= 2) {
+  const renderer = ({ api, hours, minutes, seconds, completed }: CountdownRenderProps) => {
+    if (!meetingStarted) {
+      setStartTime();
+    }
+
+    if (startTime === 0) {
+      return <MeetingNotStarted />;
+    }
+
+    if (meetingStarted && !completed) {
+      if (!api.isStarted) {
+        api.start();
+      }
+      // Render a countdown
+      return (
+        <span>
+          {hours}:{minutes}:{seconds}
+        </span>
+      );
+    }
+
+    if (meetingStarted && !completed && minutes <= 1) {
       return (
         <span>
           {hours}:{minutes}:{seconds}
@@ -120,17 +173,16 @@ export default function MainParticipantInfo({ participant, children }: MainParti
       );
     }
 
-    if (completed) {
-      room?.disconnect();
-      return <Completionist />;
+    if (meetingStarted && completed) {
+      if (startTime + meetingDuration < Date.now()) {
+        room?.disconnect();
+        window.localStorage.setItem('startTime', '');
+        console.log('bye bye');
+        return <Completionist />;
+      }
     }
 
-    // Render a countdown
-    return (
-      <span>
-        {hours}:{minutes}:{seconds}
-      </span>
-    );
+    return <MeetingNotStarted />;
   };
 
   return (
@@ -148,9 +200,9 @@ export default function MainParticipantInfo({ participant, children }: MainParti
           <Typography variant="body1" color="inherit">
             {participant.identity}
 
-            {isLocal && ' (You)'}
+            {isLocal && '(You)'}
             <pre style={{ fontFamily: 'inherit', marginTop: '.25em', marginBottom: '.75em' }}>
-              Remaining time: <Countdown date={Date.now() + 900000} zeroPadTime={0} renderer={renderer} />
+              Remaining time: <Countdown autoStart={false} date={startTime + meetingDuration} renderer={renderer} />
             </pre>
           </Typography>
         </div>
@@ -160,6 +212,7 @@ export default function MainParticipantInfo({ participant, children }: MainParti
           <AvatarIcon />
         </div>
       )}
+
       {isParticipantReconnecting && (
         <div className={classes.reconnectingContainer}>
           <Typography variant="body1" style={{ color: 'white' }}>
