@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { makeStyles, Theme } from '@material-ui/core/styles';
 import { LocalAudioTrack, LocalVideoTrack, Participant, RemoteAudioTrack, RemoteVideoTrack, Room } from 'twilio-video';
@@ -13,16 +13,11 @@ import useVideoContext from '../../hooks/useVideoContext/useVideoContext';
 import useParticipantIsReconnecting from '../../hooks/useParticipantIsReconnecting/useParticipantIsReconnecting';
 import AudioLevelIndicator from '../AudioLevelIndicator/AudioLevelIndicator';
 import Countdown, { zeroPad, CountdownRenderProps } from 'react-countdown';
-import ControlledCountdown from '../ControlledCountdown/ControlledCountdown';
-import CountdownApi from '../ControlledCountdown/CountdownApi';
-import { now } from 'd3-timer';
-import { connected, disconnect } from 'process';
-import { start } from 'repl';
+import Realistic from '../Fireworks/coffeeBreakFireWorks';
 
 const Text = require('react-text');
-const meetingDuration = 900000;
+const meetingDuration = 60000;
 // Random component
-const Completionist = () => <span>Disconnecting</span>;
 const TwoMinWarning = () => <span>Only 2 minutes left!</span>;
 const MeetingNotStarted = () => <span>Meeting not yet started</span>;
 var meetingStarted = false;
@@ -89,8 +84,16 @@ interface MainParticipantInfoProps {
   children: React.ReactNode;
 }
 
+const canvasStyles = {
+  position: 'fixed',
+  pointerEvents: 'none',
+  width: '100%',
+  height: '100%',
+  top: 0,
+  left: 0,
+};
+
 export default function MainParticipantInfo({ participant, children }: MainParticipantInfoProps) {
-  const countDown = React.createRef();
   const classes = useStyles();
   const { room } = useVideoContext();
   const localParticipant = room!.localParticipant;
@@ -143,24 +146,13 @@ export default function MainParticipantInfo({ participant, children }: MainParti
 
   // Renderer callback with condition
   const renderer = ({ api, hours, minutes, seconds, completed }: CountdownRenderProps) => {
+    console.log(Date.now());
     if (!meetingStarted) {
       setStartTime();
     }
 
     if (startTime === 0) {
       return <MeetingNotStarted />;
-    }
-
-    if (meetingStarted && !completed) {
-      if (!api.isStarted) {
-        api.start();
-      }
-      // Render a countdown
-      return (
-        <span>
-          {hours}:{minutes}:{seconds}
-        </span>
-      );
     }
 
     if (meetingStarted && !completed && minutes <= 1) {
@@ -174,15 +166,21 @@ export default function MainParticipantInfo({ participant, children }: MainParti
     }
 
     if (meetingStarted && completed) {
-      if (startTime + meetingDuration < Date.now()) {
-        room?.disconnect();
-        window.localStorage.setItem('startTime', '');
-        console.log('bye bye');
-        return <Completionist />;
-      }
+      return <Realistic />;
     }
 
-    return <MeetingNotStarted />;
+    if (startTime + meetingDuration < Date.now()) {
+      room?.disconnect();
+      window.localStorage.setItem('startTime', '');
+      console.log('bye bye');
+    }
+
+    // Render a countdown
+    return (
+      <span>
+        {hours}:{minutes}:{seconds}
+      </span>
+    );
   };
 
   return (
@@ -195,6 +193,7 @@ export default function MainParticipantInfo({ participant, children }: MainParti
     >
       <div className={classes.infoContainer}>
         <div className={classes.identity}>
+          <div> {setStartTime()} </div>
           <img width="50px" height="50px" src="../../coffeeBreak.png"></img>
           <AudioLevelIndicator audioTrack={audioTrack} />
           <Typography variant="body1" color="inherit">
@@ -202,7 +201,7 @@ export default function MainParticipantInfo({ participant, children }: MainParti
 
             {isLocal && '(You)'}
             <pre style={{ fontFamily: 'inherit', marginTop: '.25em', marginBottom: '.75em' }}>
-              Remaining time: <Countdown autoStart={false} date={startTime + meetingDuration} renderer={renderer} />
+              Remaining time: <Countdown date={startTime + meetingDuration} renderer={renderer} />
             </pre>
           </Typography>
         </div>
@@ -212,7 +211,6 @@ export default function MainParticipantInfo({ participant, children }: MainParti
           <AvatarIcon />
         </div>
       )}
-
       {isParticipantReconnecting && (
         <div className={classes.reconnectingContainer}>
           <Typography variant="body1" style={{ color: 'white' }}>
