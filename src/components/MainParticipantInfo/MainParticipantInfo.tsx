@@ -4,7 +4,7 @@ import { makeStyles, Theme } from '@material-ui/core/styles';
 import { LocalAudioTrack, LocalVideoTrack, Participant, RemoteAudioTrack, RemoteVideoTrack, Room } from 'twilio-video';
 import AvatarIcon from '../../icons/AvatarIcon';
 import Typography from '@material-ui/core/Typography';
-
+import { useWindowSize } from 'react-use';
 import useIsTrackSwitchedOff from '../../hooks/useIsTrackSwitchedOff/useIsTrackSwitchedOff';
 import usePublications from '../../hooks/usePublications/usePublications';
 import useScreenShareParticipant from '../../hooks/useScreenShareParticipant/useScreenShareParticipant';
@@ -13,16 +13,32 @@ import useVideoContext from '../../hooks/useVideoContext/useVideoContext';
 import useParticipantIsReconnecting from '../../hooks/useParticipantIsReconnecting/useParticipantIsReconnecting';
 import AudioLevelIndicator from '../AudioLevelIndicator/AudioLevelIndicator';
 import Countdown, { zeroPad, CountdownRenderProps } from 'react-countdown';
-import Realistic from '../Fireworks/coffeeBreakFireWorks';
+import Confetti from 'react-confetti';
 
 const Text = require('react-text');
-const meetingDuration = 60000;
-// Random component
-const TwoMinWarning = () => <span>Only 2 minutes left!</span>;
-const MeetingNotStarted = () => <span>Meeting not yet started</span>;
-var meetingStarted = false;
+const meetingDuration = 180000; //15 min
+const MeetingNotStarted = () => <div>Waiting for other person to join</div>;
+var meetingInProgress = false;
+var showRemainingTime: Boolean = true;
+var showTwoMinWarning: Boolean = false;
 
 const useStyles = makeStyles((theme: Theme) => ({
+  '@keyframes blinker': {
+    '50%': {
+      opacity: 0,
+    },
+  },
+  twoMinWarning: {
+    fontFamily: 'inherit',
+    animation: '$blinker 2s linear infinite',
+    color: 'red',
+    fontStyle: 'bold',
+    position: 'absolute',
+    bottom: '10px',
+    width: '100%',
+    textAlign: 'center',
+    fontSize: '2.0em',
+  },
   container: {
     position: 'relative',
     display: 'flex',
@@ -33,7 +49,9 @@ const useStyles = makeStyles((theme: Theme) => ({
     color: 'white',
     padding: '0.1em 1em .1em 0',
     fontSize: '1.2em',
-    display: 'inline-flex',
+    display: 'flex',
+    width: '19em',
+    height: '5em',
     '& svg': {
       marginLeft: '0.3em',
     },
@@ -84,26 +102,21 @@ interface MainParticipantInfoProps {
   children: React.ReactNode;
 }
 
-const canvasStyles = {
-  position: 'fixed',
-  pointerEvents: 'none',
-  width: '100%',
-  height: '100%',
-  top: 0,
-  left: 0,
-};
-
 export default function MainParticipantInfo({ participant, children }: MainParticipantInfoProps) {
+  const { width, height } = useWindowSize();
   const classes = useStyles();
   const { room } = useVideoContext();
   const localParticipant = room!.localParticipant;
-
   var startTime = Number(window.localStorage.getItem('startTime'));
+  var sho;
   setStartTime();
 
   if (room?.participants.size === 1 && room.localParticipant) {
-    meetingStarted = true;
+    meetingInProgress = true;
+  } else {
+    meetingInProgress = false;
   }
+
   const isLocal = localParticipant === participant;
 
   const screenShareParticipant = useScreenShareParticipant();
@@ -128,59 +141,59 @@ export default function MainParticipantInfo({ participant, children }: MainParti
       if (room?.participants.size === 1 && room.localParticipant) {
         startTime = Date.now();
         window.localStorage.setItem('startTime', String(startTime));
-        meetingStarted = true;
+        meetingInProgress = true;
       } else {
         startTime = 0;
         window.localStorage.setItem('startTime', '');
-        meetingStarted = false;
+        meetingInProgress = false;
       }
-    }
-
-    //meeting should be over by now so blank out start time
-    //30 min
-    //Posssible startTime did not get reset
-    if (Date.now() > startTime + meetingDuration) {
-      //startTime = 0;
     }
   }
 
-  // Renderer callback with condition
+  function formatTime(minutes: number, seconds: number) {
+    var strMin = '';
+    var strSec = '';
+
+    if (minutes < 10) {
+      strMin = '0' + minutes.toString();
+    } else {
+      strMin = minutes.toString();
+    }
+
+    if (seconds < 10) {
+      strSec = '0' + seconds.toString();
+    } else {
+      strSec = seconds.toString();
+    }
+
+    return strMin + ':' + strSec;
+  }
+
   const renderer = ({ api, hours, minutes, seconds, completed }: CountdownRenderProps) => {
-    console.log(Date.now());
-    if (!meetingStarted) {
-      setStartTime();
-    }
-
-    if (startTime === 0) {
+    if (!meetingInProgress) {
       return <MeetingNotStarted />;
-    }
-
-    if (meetingStarted && !completed && minutes <= 1) {
+    } else if (meetingInProgress && !completed) {
+      if (minutes <= 1 && !completed) {
+        showTwoMinWarning = true;
+        return <span>Remaining time: {formatTime(minutes, seconds)}</span>;
+      }
+      return <span>Remaining time: {formatTime(minutes, seconds)}</span>;
+    } else if (completed) {
+      showRemainingTime = false;
       return (
         <span>
-          {hours}:{minutes}:{seconds}
-          <p></p>
-          <TwoMinWarning />
+          Another successful coffeeBreak!
+          <Confetti width={width} height={height} numberOfPieces={800} initialVelocityX={8} initialVelocityY={20} />
+          {console.log(
+            setTimeout(() => {
+              startTime = 0;
+              room?.disconnect();
+              window.localStorage.setItem('startTime', '');
+            }, 8000)
+          )}
         </span>
       );
     }
-
-    if (meetingStarted && completed) {
-      return <Realistic />;
-    }
-
-    if (startTime + meetingDuration < Date.now()) {
-      room?.disconnect();
-      window.localStorage.setItem('startTime', '');
-      console.log('bye bye');
-    }
-
-    // Render a countdown
-    return (
-      <span>
-        {hours}:{minutes}:{seconds}
-      </span>
-    );
   };
 
   return (
@@ -193,18 +206,21 @@ export default function MainParticipantInfo({ participant, children }: MainParti
     >
       <div className={classes.infoContainer}>
         <div className={classes.identity}>
-          <div> {setStartTime()} </div>
           <img width="50px" height="50px" src="../../coffeeBreak.png"></img>
           <AudioLevelIndicator audioTrack={audioTrack} />
           <Typography variant="body1" color="inherit">
             {participant.identity}
+            <div>{isLocal && '(You)'}</div>
 
-            {isLocal && '(You)'}
-            <pre style={{ fontFamily: 'inherit', marginTop: '.25em', marginBottom: '.75em' }}>
-              Remaining time: <Countdown date={startTime + meetingDuration} renderer={renderer} />
-            </pre>
+            {showRemainingTime && (
+              <div style={{ fontFamily: 'inherit', marginTop: '.25em', marginBottom: '.75em' }}>
+                <Countdown key={startTime + meetingDuration} date={startTime + meetingDuration} renderer={renderer} />
+              </div>
+            )}
           </Typography>
         </div>
+
+        {showTwoMinWarning && <div className={clsx(classes.twoMinWarning)}>{'Less than two minutes remaining!'}</div>}
       </div>
       {(!isVideoEnabled || isVideoSwitchedOff) && (
         <div className={classes.avatarContainer}>
