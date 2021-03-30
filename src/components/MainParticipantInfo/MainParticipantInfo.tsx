@@ -16,7 +16,7 @@ import Countdown, { zeroPad, CountdownRenderProps } from 'react-countdown';
 import Confetti from 'react-confetti';
 
 const Text = require('react-text');
-const meetingDuration = 180000; //15 min
+const meetingDuration = 900000; //15 min
 const MeetingNotStarted = () => <div>Waiting for other person to join</div>;
 var meetingInProgress = false;
 var showRemainingTime: Boolean = true;
@@ -31,7 +31,7 @@ const useStyles = makeStyles((theme: Theme) => ({
   twoMinWarning: {
     fontFamily: 'inherit',
     animation: '$blinker 2s linear infinite',
-    color: 'red',
+    color: 'white',
     fontStyle: 'bold',
     position: 'absolute',
     bottom: '10px',
