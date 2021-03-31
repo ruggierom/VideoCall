@@ -17,6 +17,7 @@ import Confetti from 'react-confetti';
 
 const meetingDuration = 130000; //15 min
 const MeetingNotStarted = () => <div>Waiting for other person to join</div>;
+const TwoMinWarn = () => <div className={clsx(useStyles().twoMinWarning)}>{'Less than two minutes remaining!'}</div>;
 var showRemainingTime: Boolean = true;
 var showTwoMinWarning: Boolean = false;
 var showWaiting: Boolean = true;
@@ -195,12 +196,20 @@ export default function MainParticipantInfo({ participant, children }: MainParti
   }
 
   const renderer = ({ api, hours, minutes, seconds, completed }: CountdownRenderProps) => {
-    if (startTime > 0 && minutes > 0 && seconds > 0) {
-      return <span>Remaining time: {formatTime(minutes, seconds)}</span>;
-    }
-
     if (minutes <= 1 && minutes > 0 && seconds > 0) {
       showTwoMinWarning = true;
+      console.log('2 min warn');
+      return (
+        <span>
+          Remaining time: {formatTime(minutes, seconds)}{' '}
+          <span>
+            <TwoMinWarn />
+          </span>{' '}
+        </span>
+      );
+    }
+
+    if (startTime > 0 && minutes > 0 && seconds > 0) {
       return <span>Remaining time: {formatTime(minutes, seconds)}</span>;
     }
 
@@ -229,6 +238,7 @@ export default function MainParticipantInfo({ participant, children }: MainParti
         <div className={classes.identity}>
           <img width="50px" height="50px" src="../../coffeeBreak.png"></img>
           <AudioLevelIndicator audioTrack={audioTrack} />
+
           <Typography component={'span'} variant="body1" color="inherit">
             {participant.identity}
             <div>{isLocal && '(You)'}</div>
@@ -242,8 +252,6 @@ export default function MainParticipantInfo({ participant, children }: MainParti
             )}
           </Typography>
         </div>
-
-        {showTwoMinWarning && <div className={clsx(classes.twoMinWarning)}>{'Less than two minutes remaining!'}</div>}
       </div>
       {(!isVideoEnabled || isVideoSwitchedOff) && (
         <div className={classes.avatarContainer}>
