@@ -1,7 +1,7 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React from 'react';
 import clsx from 'clsx';
 import { makeStyles, Theme } from '@material-ui/core/styles';
-import { LocalAudioTrack, LocalVideoTrack, Participant, RemoteAudioTrack, RemoteVideoTrack, Room } from 'twilio-video';
+import { LocalAudioTrack, LocalVideoTrack, Participant, RemoteAudioTrack, RemoteVideoTrack } from 'twilio-video';
 import AvatarIcon from '../../icons/AvatarIcon';
 import Typography from '@material-ui/core/Typography';
 import { useWindowSize } from 'react-use';
@@ -12,21 +12,24 @@ import useTrack from '../../hooks/useTrack/useTrack';
 import useVideoContext from '../../hooks/useVideoContext/useVideoContext';
 import useParticipantIsReconnecting from '../../hooks/useParticipantIsReconnecting/useParticipantIsReconnecting';
 import AudioLevelIndicator from '../AudioLevelIndicator/AudioLevelIndicator';
-import Countdown, { zeroPad, CountdownRenderProps } from 'react-countdown';
+import Countdown, { CountdownRenderProps } from 'react-countdown';
 import Confetti from 'react-confetti';
 
-const Text = require('react-text');
-const meetingDuration = 900000; //15 min
+const meetingDuration = 130000; //15 min
 const MeetingNotStarted = () => <div>Waiting for other person to join</div>;
-var meetingInProgress = false;
 var showRemainingTime: Boolean = true;
 var showTwoMinWarning: Boolean = false;
+var showWaiting: Boolean = true;
 
 const useStyles = makeStyles((theme: Theme) => ({
   '@keyframes blinker': {
     '50%': {
       opacity: 0,
     },
+  },
+  debug: {
+    marginTop: '60px',
+    color: 'white',
   },
   twoMinWarning: {
     fontFamily: 'inherit',
@@ -107,55 +110,69 @@ export default function MainParticipantInfo({ participant, children }: MainParti
   const classes = useStyles();
   const { room } = useVideoContext();
   const localParticipant = room!.localParticipant;
-  var startTime = 0;
-
-  setStartTime();
-
-  if (room?.participants.size === 1 && room.localParticipant) {
-    meetingInProgress = true;
-  } else {
-    meetingInProgress = false;
-  }
-
   const isLocal = localParticipant === participant;
-
   const screenShareParticipant = useScreenShareParticipant();
   const isRemoteParticipantScreenSharing = screenShareParticipant && screenShareParticipant !== localParticipant;
-
   const publications = usePublications(participant);
   const videoPublication = publications.find(p => p.trackName.includes('camera'));
-
   const screenSharePublication = publications.find(p => p.trackName.includes('screen'));
-
   const videoTrack = useTrack(screenSharePublication || videoPublication);
   const isVideoEnabled = Boolean(videoTrack);
-
   const audioPublication = publications.find(p => p.kind === 'audio');
   const audioTrack = useTrack(audioPublication) as LocalAudioTrack | RemoteAudioTrack | undefined;
-
   const isVideoSwitchedOff = useIsTrackSwitchedOff(videoTrack as LocalVideoTrack | RemoteVideoTrack);
   const isParticipantReconnecting = useParticipantIsReconnecting(participant);
+  var startTime = 0;
+
+  function shutDown() {
+    const handle = setTimeout(() => {
+      try {
+        room?.disconnect();
+      } catch (e) {}
+      clearStartTime();
+    }, 8000);
+  }
+
+  function startIfBothConnected() {
+    try {
+      if (
+        room?.participants.entries().next().value[1].state === 'connected' &&
+        localParticipant.state === 'connected'
+      ) {
+        //if (room?.participants && localParticipant.state === 'connected') {
+        setStartTime();
+        showWaiting = false;
+      } else {
+        showWaiting = true;
+        console.log('remote: ', room?.participants.entries().next().value[1].state);
+        console.log('local: ', localParticipant.state);
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  startIfBothConnected();
 
   function setStartTime() {
-    if (startTime === 0) {
-      //set 1st time
-      if (room?.participants.size === 1 && room.localParticipant) {
-        startTime = Date.now();
-        window.localStorage.setItem('startTime', String(startTime));
-        meetingInProgress = true;
-      } else {
-        startTime = 0;
-        window.localStorage.setItem('startTime', '');
-        meetingInProgress = false;
-      }
+    const temp = window.localStorage.getItem(localParticipant.identity + room?.name);
+    if (temp != null) {
+      startTime = Number(temp);
+      console.log('got time from local storage');
     } else {
-      //expire old starttime if it did not get reset
-      if (startTime < Date.now() + meetingDuration + 600000) {
-        startTime = 0;
-        window.localStorage.setItem('startTime', '');
-        meetingInProgress = false;
-      }
+      startTime = Date.now();
+      console.log('reset time');
+      window.localStorage.setItem(localParticipant.identity + room?.name, startTime.toString());
     }
+  }
+
+  function clearStartTime() {
+    window.localStorage.clear();
+  }
+
+  function saveStartTime() {
+    window.localStorage.setItem(localParticipant.identity + room?.name, room!.timeMeetingStarted.toString());
+    startTime = room!.timeMeetingStarted;
   }
 
   function formatTime(minutes: number, seconds: number) {
@@ -178,30 +195,26 @@ export default function MainParticipantInfo({ participant, children }: MainParti
   }
 
   const renderer = ({ api, hours, minutes, seconds, completed }: CountdownRenderProps) => {
-    if (!meetingInProgress) {
-      return <MeetingNotStarted />;
-    } else if (meetingInProgress && !completed) {
-      if (minutes <= 1 && !completed) {
-        showTwoMinWarning = true;
-        return <span>Remaining time: {formatTime(minutes, seconds)}</span>;
-      }
+    if (startTime > 0 && minutes > 0 && seconds > 0) {
       return <span>Remaining time: {formatTime(minutes, seconds)}</span>;
-    } else if (completed) {
+    }
+
+    if (minutes <= 1 && minutes > 0 && seconds > 0) {
+      showTwoMinWarning = true;
+      return <span>Remaining time: {formatTime(minutes, seconds)}</span>;
+    }
+
+    if (minutes === 0 && seconds === 0 && completed) {
       showRemainingTime = false;
       return (
         <span>
           Another successful coffeeBreak!
           <Confetti width={width} height={height} numberOfPieces={800} initialVelocityX={8} initialVelocityY={20} />
-          {console.log(
-            setTimeout(() => {
-              startTime = 0;
-              room?.disconnect();
-              window.localStorage.setItem('startTime', '');
-            }, 8000)
-          )}
+          {shutDown()}
         </span>
       );
     }
+    return <span>Remaining time: {formatTime(minutes, seconds)}</span>;
   };
 
   return (
@@ -220,9 +233,11 @@ export default function MainParticipantInfo({ participant, children }: MainParti
             {participant.identity}
             <div>{isLocal && '(You)'}</div>
 
-            {showRemainingTime && (
+            {showWaiting && <MeetingNotStarted />}
+
+            {showRemainingTime && startTime > 0 && (
               <div style={{ fontFamily: 'inherit', marginTop: '.25em', marginBottom: '.75em' }}>
-                <Countdown key={startTime + meetingDuration} date={startTime + meetingDuration} renderer={renderer} />
+                <Countdown date={startTime + meetingDuration} renderer={renderer} />
               </div>
             )}
           </Typography>
