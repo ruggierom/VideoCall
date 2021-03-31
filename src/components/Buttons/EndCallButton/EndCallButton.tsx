@@ -38,8 +38,6 @@ export default function EndCallButton(props: { className?: string }) {
   return (
     <Button
       onClick={() => {
-        var x = Number(asyncLocalStorage.getItem('startTime'));
-        asyncLocalStorage.setItem('startTime', '');
         room!.disconnect();
       }}
       className={clsx(classes.button, props.className)}

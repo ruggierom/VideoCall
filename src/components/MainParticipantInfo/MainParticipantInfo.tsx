@@ -107,8 +107,8 @@ export default function MainParticipantInfo({ participant, children }: MainParti
   const classes = useStyles();
   const { room } = useVideoContext();
   const localParticipant = room!.localParticipant;
-  var startTime = Number(window.localStorage.getItem('startTime'));
-  var sho;
+  var startTime = 0;
+
   setStartTime();
 
   if (room?.participants.size === 1 && room.localParticipant) {
@@ -138,11 +138,19 @@ export default function MainParticipantInfo({ participant, children }: MainParti
 
   function setStartTime() {
     if (startTime === 0) {
+      //set 1st time
       if (room?.participants.size === 1 && room.localParticipant) {
         startTime = Date.now();
         window.localStorage.setItem('startTime', String(startTime));
         meetingInProgress = true;
       } else {
+        startTime = 0;
+        window.localStorage.setItem('startTime', '');
+        meetingInProgress = false;
+      }
+    } else {
+      //expire old starttime if it did not get reset
+      if (startTime < Date.now() + meetingDuration + 600000) {
         startTime = 0;
         window.localStorage.setItem('startTime', '');
         meetingInProgress = false;
@@ -208,7 +216,7 @@ export default function MainParticipantInfo({ participant, children }: MainParti
         <div className={classes.identity}>
           <img width="50px" height="50px" src="../../coffeeBreak.png"></img>
           <AudioLevelIndicator audioTrack={audioTrack} />
-          <Typography variant="body1" color="inherit">
+          <Typography component={'span'} variant="body1" color="inherit">
             {participant.identity}
             <div>{isLocal && '(You)'}</div>
 
@@ -229,7 +237,7 @@ export default function MainParticipantInfo({ participant, children }: MainParti
       )}
       {isParticipantReconnecting && (
         <div className={classes.reconnectingContainer}>
-          <Typography variant="body1" style={{ color: 'white' }}>
+          <Typography component={'span'} variant="body1" style={{ color: 'white' }}>
             Reconnecting...
           </Typography>
         </div>
