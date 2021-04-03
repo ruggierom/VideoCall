@@ -12,6 +12,123 @@ import Typography from '@material-ui/core/Typography';
 
 import { makeStyles } from '@material-ui/core/styles';
 import { useLocation, useHistory } from 'react-router-dom';
+import firebase from 'firebase';
+import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
+import { Url } from 'node:url';
+
+const useStyles = makeStyles((theme: Theme) => ({
+  LoginFormContainer: {
+    width: '50%',
+    backgroundColor: 'red',
+    alignItems: 'center',
+    height: '50%',
+    border: '1',
+    borderWidth: '2px',
+  },
+  errorMessage: {
+    color: 'red',
+    display: 'flex',
+    alignItems: 'center',
+    margin: '1em 0 0.2em',
+    '& svg': {
+      marginRight: '0.4em',
+    },
+  },
+  gutterBottom: {
+    marginBottom: '1em',
+  },
+  passcodeContainer: {
+    minHeight: '120px',
+  },
+  submitButton: {
+    [theme.breakpoints.down('sm')]: {
+      width: '100%',
+    },
+  },
+}));
+
+export default function LoginPage() {
+  const classes = useStyles();
+  const { signIn, user, isAuthReady } = useAppState();
+  const history = useHistory();
+  const location = useLocation<{ from: Location }>();
+  const [passcode, setPasscode] = useState('');
+  const [authError, setAuthError] = useState<Error | null>(null);
+
+  const isAuthEnabled = Boolean(process.env.REACT_APP_SET_AUTH);
+
+  if (user || !isAuthEnabled) {
+    history.replace('/');
+  }
+
+  if (!isAuthReady) {
+    return null;
+  }
+
+  const uiConfig = {
+    callbacks: {
+      signInSuccessWithAuthResult: function(authResult: AuthenticatorResponse, redirectUrl: Url) {
+        // User successfully signed in.
+        // Return type determines whether we continue the redirect automatically
+        // or whether we leave that to developer to handle.
+        var user = firebase.auth().currentUser;
+        var name, email, photoUrl, uid, emailVerified;
+
+        if (user != null) {
+          name = user.displayName;
+          email = user.email;
+          photoUrl = user.photoURL;
+          emailVerified = user.emailVerified;
+          uid = user.uid; // The user's ID, unique to the Firebase project. Do NOT use
+          // this value to authenticate with your backend server, if
+          // you have one. Use User.getToken() instead.
+
+          //get toom name and display name from db
+          console.log(name);
+        }
+
+        return true;
+      },
+    },
+    // Popup signin flow rather than redirect flow.
+    signInFlow: 'popup',
+    // Redirect to /signedIn after sign in is successful. Alternatively you can provide a callbacks.signInSuccess function.
+    signInSuccessUrl: '/',
+    // We will display Google and Facebook as auth providers.
+    signInOptions: [firebase.auth.GoogleAuthProvider.PROVIDER_ID, firebase.auth.EmailAuthProvider.PROVIDER_ID],
+  };
+
+  return (
+    <IntroContainer>
+      {process.env.REACT_APP_SET_AUTH === 'firebase' && (
+        <>
+          <Typography variant="h5" className={classes.gutterBottom}>
+            Sign in/create a coffeeBreak account
+          </Typography>
+          <div>
+            <StyledFirebaseAuth uiConfig={uiConfig} firebaseAuth={firebase.auth()} />
+          </div>
+        </>
+      )}
+    </IntroContainer>
+  );
+}
+
+/*
+import React, { ChangeEvent, useState, FormEvent } from 'react';
+import { useAppState } from '../../state';
+
+import Button from '@material-ui/core/Button';
+import ErrorOutlineIcon from '@material-ui/icons/ErrorOutline';
+import Grid from '@material-ui/core/Grid';
+import { ReactComponent as GoogleLogo } from './google-logo.svg';
+import { InputLabel, Theme } from '@material-ui/core';
+import IntroContainer from '../IntroContainer/IntroContainer';
+import TextField from '@material-ui/core/TextField';
+import Typography from '@material-ui/core/Typography';
+
+import { makeStyles } from '@material-ui/core/styles';
+import { useLocation, useHistory } from 'react-router-dom';
 
 const useStyles = makeStyles((theme: Theme) => ({
   googleButton: {
@@ -144,3 +261,4 @@ export default function LoginPage() {
     </IntroContainer>
   );
 }
+*/

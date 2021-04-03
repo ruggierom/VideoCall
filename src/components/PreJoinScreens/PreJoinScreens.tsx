@@ -17,22 +17,28 @@ export enum Steps {
 export default function PreJoinScreens() {
   const { user } = useAppState();
   const { getAudioAndVideoTracks } = useVideoContext();
-  const { URLRoomName } = useParams();
+
+  const { URLIdentity } = useParams();
+  const { URLMeetingId } = useParams();
   const [step, setStep] = useState(Steps.roomNameStep);
 
-  const [name, setName] = useState<string>(user?.displayName || '');
+  const [userName, setUserName] = useState<string>('');
   const [roomName, setRoomName] = useState<string>('');
 
   const [mediaError, setMediaError] = useState<Error>();
 
   useEffect(() => {
-    if (URLRoomName) {
-      setRoomName(URLRoomName);
+    if (URLIdentity) {
+      setUserName(URLIdentity);
+      setStep(Steps.deviceSelectionStep);
+    }
+    if (URLMeetingId) {
+      setRoomName(URLMeetingId);
       if (user?.displayName) {
         setStep(Steps.deviceSelectionStep);
       }
     }
-  }, [user, URLRoomName]);
+  }, [user, URLMeetingId, URLIdentity]);
 
   useEffect(() => {
     if (step === Steps.deviceSelectionStep && !mediaError) {
@@ -60,6 +66,27 @@ export default function PreJoinScreens() {
     </>
   );
 
+  //console.log({ setUserName })
+  //console.log({ setRoomName })
+
+  return (
+    <IntroContainer subContent={step === Steps.deviceSelectionStep && SubContent}>
+      {step === Steps.roomNameStep && (
+        <RoomNameScreen
+          userName={userName}
+          roomName={roomName}
+          setUserName={setUserName}
+          setRoomName={setRoomName}
+          handleSubmit={handleSubmit}
+        />
+      )}
+
+      {step === Steps.deviceSelectionStep && (
+        <DeviceSelectionScreen userName={userName} roomName={roomName} setStep={setStep} />
+      )}
+    </IntroContainer>
+  );
+  /*
   return (
     <IntroContainer subContent={step === Steps.deviceSelectionStep && SubContent}>
       {step === Steps.roomNameStep && (
@@ -77,4 +104,5 @@ export default function PreJoinScreens() {
       )}
     </IntroContainer>
   );
+  */
 }

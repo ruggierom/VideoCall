@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import * as firebase from 'firebase/app';
 import 'firebase/auth';
+import firebase, { auth } from 'firebase/app';
+import { Console } from 'node:console';
 
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -15,26 +16,31 @@ export default function useFirebaseAuth() {
   const [isAuthReady, setIsAuthReady] = useState(false);
 
   const getToken = useCallback(
-    async (user_identity: string, room_name: string) => {
+    async (identity: string, meetingId: string) => {
       const headers = new window.Headers();
 
-      const idToken = await user!.getIdToken();
-      headers.set('Authorization', idToken);
-      headers.set('content-type', 'application/json');
+      if (user == null) {
+        console.log('anonymous user');
+      } else {
+        const idToken = await user!.getIdToken();
+        headers.set('Authorization', idToken);
+        headers.set('accept', 'application/json');
+        headers.set('Access-Control-Allow-Origin', '*');
+      }
 
-      const endpoint = process.env.REACT_APP_TOKEN_ENDPOINT || '/token';
+      var endpoint = process.env.REACT_APP_TOKEN_ENDPOINT || '/token';
 
-      return fetch(endpoint, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          user_identity,
-          room_name,
-          create_conversation: process.env.REACT_APP_DISABLE_TWILIO_CONVERSATIONS !== 'true',
-        }),
-      })
-        .then(res => res.json())
-        .then(res => res.token as string);
+      endpoint += '?meetingId=' + meetingId + '&identity=' + identity;
+      console.log(endpoint);
+      return (
+        fetch(endpoint, {
+          //mode: 'no-cors',
+          method: 'GET',
+          headers,
+        })
+          //.then(res => res.json())
+          .then(res => res.text())
+      );
     },
     [user]
   );
@@ -47,8 +53,9 @@ export default function useFirebaseAuth() {
     });
   }, []);
 
-  const signIn = useCallback(() => {
+  const googleSignIn = useCallback(() => {
     const provider = new firebase.auth.GoogleAuthProvider();
+
     provider.addScope('https://www.googleapis.com/auth/plus.login');
 
     return firebase
@@ -59,6 +66,16 @@ export default function useFirebaseAuth() {
       });
   }, []);
 
+  const emailSignIn = useCallback(() => {
+    const provider = new firebase.auth.EmailAuthProvider();
+
+    return firebase
+      .auth()
+      .signInWithPopup(provider)
+      .then(newUser => {
+        setUser(newUser.user);
+      });
+  }, []);
   const signOut = useCallback(() => {
     return firebase
       .auth()
@@ -68,5 +85,5 @@ export default function useFirebaseAuth() {
       });
   }, []);
 
-  return { user, signIn, signOut, isAuthReady, getToken };
+  return { user, signIn: emailSignIn, googleSignIn, signOut, isAuthReady, getToken };
 }

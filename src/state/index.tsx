@@ -23,6 +23,9 @@ export interface StateContextType {
   roomType?: RoomType;
 }
 
+var firebase = require('firebase');
+var firebaseui = require('firebaseui');
+
 export const StateContext = createContext<StateContextType>(null!);
 
 /*
@@ -55,21 +58,17 @@ export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
       ...contextValue,
       ...useFirebaseAuth(), // eslint-disable-line react-hooks/rules-of-hooks
     };
-  } else if (process.env.REACT_APP_SET_AUTH === 'passcode') {
-    contextValue = {
-      ...contextValue,
-      ...usePasscodeAuth(), // eslint-disable-line react-hooks/rules-of-hooks
-    };
   } else {
     contextValue = {
       ...contextValue,
       getToken: async (user_identity, room_name) => {
         const endpoint = process.env.REACT_APP_TOKEN_ENDPOINT || '/token';
-
         return fetch(endpoint, {
+          mode: 'no-cors',
           method: 'POST',
           headers: {
             'content-type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
           },
           body: JSON.stringify({
             user_identity,

@@ -15,7 +15,7 @@ import AudioLevelIndicator from '../AudioLevelIndicator/AudioLevelIndicator';
 import Countdown, { CountdownRenderProps } from 'react-countdown';
 import Confetti from 'react-confetti';
 
-const meetingDuration = 900000; //15 min
+const meetingDuration = 10000; //15 min
 const MeetingNotStarted = () => <div>Waiting for other person to join</div>;
 const TwoMinWarn = () => <div className={clsx(useStyles().twoMinWarning)}>{'Less than two minutes remaining!'}</div>;
 var showRemainingTime: Boolean = true;
@@ -135,18 +135,21 @@ export default function MainParticipantInfo({ participant, children }: MainParti
   }
 
   function startIfBothConnected() {
+    console.log('roomname: ' + room?.name);
     try {
-      if (
-        room?.participants.entries().next().value[1].state === 'connected' &&
-        localParticipant.state === 'connected'
-      ) {
-        //if (room?.participants && localParticipant.state === 'connected') {
-        setStartTime();
-        showWaiting = false;
-      } else {
-        showWaiting = true;
-        console.log('remote: ', room?.participants.entries().next().value[1].state);
-        console.log('local: ', localParticipant.state);
+      if (room?.participants.entries().next().value != undefined) {
+        if (
+          room?.participants.entries().next().value[1].state === 'connected' &&
+          localParticipant.state === 'connected'
+        ) {
+          //if (room?.participants && localParticipant.state === 'connected') {
+          setStartTime();
+          showWaiting = false;
+        } else {
+          showWaiting = true;
+          console.log('remote: ', room?.participants.entries().next().value[1].state);
+          console.log('local: ', localParticipant.state);
+        }
       }
     } catch (e) {
       console.log(e);
@@ -218,7 +221,14 @@ export default function MainParticipantInfo({ participant, children }: MainParti
       return (
         <span>
           Another successful coffeeBreak!
-          <Confetti width={width} height={height} numberOfPieces={800} initialVelocityX={8} initialVelocityY={20} />
+          <Confetti
+            width={width}
+            height={height}
+            numberOfPieces={800}
+            opacity={0.5}
+            initialVelocityX={8}
+            initialVelocityY={20}
+          />
           {shutDown()}
         </span>
       );
@@ -236,7 +246,7 @@ export default function MainParticipantInfo({ participant, children }: MainParti
     >
       <div className={classes.infoContainer}>
         <div className={classes.identity}>
-          <img width="50px" height="50px" src="../../coffeeBreak.png"></img>
+          <img width="50px" height="50px" src="../../../coffeeBreak.png"></img>
           <AudioLevelIndicator audioTrack={audioTrack} />
 
           <Typography component={'span'} variant="body1" color="inherit">

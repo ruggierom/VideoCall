@@ -19,6 +19,7 @@ export default function useGetPreflightTokens() {
 
       Promise.all([getToken(publisherIdentity, roomName), getToken(subscriberIdentity, roomName)])
         .then(newTokens => {
+          console.log('preflight');
           setTokens(newTokens);
           setIsFetching(false);
         })
