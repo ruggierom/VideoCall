@@ -16,6 +16,7 @@ import { ChatProvider } from './components/ChatProvider';
 import { VideoProvider } from './components/VideoProvider';
 import useConnectionOptions from './utils/useConnectionOptions/useConnectionOptions';
 import UnsupportedBrowserWarning from './components/UnsupportedBrowserWarning/UnsupportedBrowserWarning';
+import InvitePage from './components/InvitePage/InvitePage';
 
 const VideoApp = () => {
   const { error, setError } = useAppState();
@@ -41,13 +42,14 @@ ReactDOM.render(
             <PrivateRoute exact path="/">
               <VideoApp />
             </PrivateRoute>
-
             <Route path="/meetingId/:URLMeetingId/identity/:URLIdentity">
               <VideoApp />
             </Route>
-
             <Route path="/login">
               <LoginPage />
+            </Route>
+            <Route path="/invite/meetingId/:URLMeetingId/identity/:URLIdentity">
+              <VideoApp />
             </Route>
             <Redirect to="/" />
           </Switch>

@@ -1,11 +1,15 @@
 import * as functions from 'firebase-functions';
 import { Request, Response, Application } from 'express';
-import express = require('express');
+//import express = require('express');
 import * as path from 'path';
 import admin = require('firebase-admin');
 
+const Twilio = require('twilio');
+
 const cors = require('cors')({ origin: true });
-const AccessToken = require('twilio').jwt.AccessToken;
+const AccessToken = Twilio.jwt.AccessToken;
+const VideoGrant = AccessToken.VideoGrant;
+const ChatGrant = AccessToken.ChatGrant;
 
 var app: Application = express();
 app.use(cors);
@@ -14,11 +18,16 @@ admin.initializeApp({
     credential: admin.credential.applicationDefault()
 });
 
-const VideoGrant = AccessToken.VideoGrant;
 const MAX_ALLOWED_SESSION_DURATION = 180; //30 min
+
 const twilioAccountSid = 'AC48971261e37cd90ce1bb554af65efac2';
 const twilioApiKeySID = 'SK5427e8719bad205c94c833fdbdfe21e2';
 const twilioApiKeySecret = 'z731qFsLvYaL2GLOKEnjyZBBgVHd7pnX';
+const twilioConversationsServiceSid = 'IS77c9edd3c0a44e60a328b3fac4c2da08';
+
+const client = Twilio(twilioApiKeySID, twilioApiKeySecret, {
+    accountSid: twilioAccountSid,
+});
 
 app.use(express.static(path.join(__dirname, 'build')));
 
@@ -28,7 +37,7 @@ app.get('/token', (req: Request, res: Response) => {
 
     const db = admin.firestore();
     const docRef = db.collection('meetings').doc(meetingId!.toString());
-    var roomName = "";
+    var roomName = meetingId!.toString();
 
     docRef.get()
         .then(doc => {
@@ -38,22 +47,91 @@ app.get('/token', (req: Request, res: Response) => {
             } else {
                 roomName = doc?.data()!.roomName.toString();
                 retVal = true;
+                let room;
 
-                if (retVal) {
-                    const token = new AccessToken(twilioAccountSid, twilioApiKeySID, twilioApiKeySecret, {
-                        ttl: MAX_ALLOWED_SESSION_DURATION,
-                    });
-                    token.identity = identity;
-                    const videoGrant = new VideoGrant({ room: roomName });
-                    token.addGrant(videoGrant);
-                    res.set('Cache-Control', 'no-cache');
-                    //res.set('Content-Type', 'application/json');
-                    res.send(token.toJwt());
-                    console.log('Issued token for: ' + { identity } + ' in room: ' + { roomName });
-                } else {
-                    res.send("");
-                    console.log('unable to create token');
+                try {
+                    // See if a room already exists
+                    room = client.video.rooms(roomName).fetch();
+                } catch (e) {
+                    try {
+                        // If room doesn't exist, create it
+                        room = client.video.rooms.create({
+                            uniqueName: roomName//, type: 'go'
+                        });
+                    } catch (e) {
+                        console.log(e);
+                        res.statusCode = 500;
+                        res.send({
+                            error: {
+                                message: 'error creating room',
+                                explanation: 'Something went wrong when creating a room.',
+                            },
+                        });
+                    }
                 }
+
+                console.log('getting conversation client');
+                const conversationsClient = client.conversations.services(twilioConversationsServiceSid);
+                try {
+                    // See if conversation already exists
+                    conversationsClient.conversations(room.sid).fetch();
+                    console.log('checking if conversation already exists');
+                } catch (e) {
+                    try {
+                        // If conversation doesn't exist, create it.
+                        conversationsClient.conversations.create({ uniqueName: room.sid });
+                        console.log('Creating conversation');
+                    } catch (e) {
+                        console.log(e);
+                        res.statusCode = 500;
+                        res.send({
+                            error: {
+                                message: 'error creating conversation',
+                                explanation: 'Something went wrong when creating a conversation.',
+                            },
+                        });
+                    }
+                }
+
+                try {
+                    // Add participant to conversation
+                    conversationsClient.conversations(room.sid).participants.create({ identity: identity });
+                    console.log('Add participant to conversation');
+                } catch (e) {
+                    console.log(e);
+                    // Ignore "Participant already exists" error (50433)
+                    if (e.code !== 50433) {
+                        res.statusCode = 500;
+                        res.send({
+                            error: {
+                                message: 'error creating conversation participant',
+                                explanation: 'Something went wrong when creating a conversation participant.',
+                            },
+                        });
+                    }
+                }
+            }
+
+            if (retVal) {
+                const token = new AccessToken(twilioAccountSid, twilioApiKeySID, twilioApiKeySecret, {
+                    ttl: MAX_ALLOWED_SESSION_DURATION,
+                });
+
+                token.identity = identity;
+                //token.roomType = 'go';
+                token.roomName = roomName;
+                const videoGrant = new VideoGrant({ room: roomName });
+                token.addGrant(videoGrant);
+
+                const chatGrant = new ChatGrant({ serviceSid: twilioConversationsServiceSid });
+                token.addGrant(chatGrant);
+                res.set('Cache-Control', 'no-cache');
+                //res.set('Content-Type', 'application/json');
+                res.send(token.toJwt());
+                console.log('Issued token for: ' + { identity } + ' in room: ' + { roomName });
+            } else {
+                res.send("");
+                console.log('unable to create token');
             }
         })
         .catch(err => {

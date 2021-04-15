@@ -20,7 +20,7 @@ const useStyles = makeStyles({
 
 export default function SettingsMenu({ mobileButtonClass }: { mobileButtonClass?: string }) {
   const classes = useStyles();
-  const { roomType } = useAppState();
+  var { roomType } = useAppState();
   const isMobile = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
   const [menuOpen, setMenuOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
@@ -28,6 +28,7 @@ export default function SettingsMenu({ mobileButtonClass }: { mobileButtonClass?
   const [connectionSettingsOpen, setConnectionSettingsOpen] = useState(false);
 
   const anchorRef = useRef<HTMLButtonElement>(null);
+  roomType = 'go';
 
   return (
     <>

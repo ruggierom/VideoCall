@@ -15,7 +15,7 @@ import AudioLevelIndicator from '../AudioLevelIndicator/AudioLevelIndicator';
 import Countdown, { CountdownRenderProps } from 'react-countdown';
 import Confetti from 'react-confetti';
 
-const meetingDuration = 10000; //15 min
+const meetingDuration = 900000; //15 min
 const MeetingNotStarted = () => <div>Waiting for other person to join</div>;
 const TwoMinWarn = () => <div className={clsx(useStyles().twoMinWarning)}>{'Less than two minutes remaining!'}</div>;
 var showRemainingTime: Boolean = true;

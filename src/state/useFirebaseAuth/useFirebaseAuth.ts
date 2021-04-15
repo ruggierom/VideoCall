@@ -7,8 +7,10 @@ const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
   authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
   databaseURL: process.env.REACT_APP_FIREBASE_DATABASE_URL,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
   storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
 };
 
 export default function useFirebaseAuth() {
@@ -18,19 +20,28 @@ export default function useFirebaseAuth() {
   const getToken = useCallback(
     async (identity: string, meetingId: string) => {
       const headers = new window.Headers();
+      var endpoint = process.env.REACT_APP_TOKEN_ENDPOINT || '/token';
 
       if (user == null) {
         console.log('anonymous user');
+        endpoint += '?meetingId=' + meetingId + '&identity=' + identity;
       } else {
         const idToken = await user!.getIdToken();
         headers.set('Authorization', idToken);
         headers.set('accept', 'application/json');
         headers.set('Access-Control-Allow-Origin', '*');
+
+        var meetingDisplayName = '';
+        var names = user.displayName?.split(' ');
+
+        if (names != null && names?.length > 1) {
+          meetingDisplayName = names[0] + ' ' + names[1].substring(0, 1) + '.';
+        } else {
+          meetingDisplayName = identity;
+        }
+        endpoint += '?meetingId=' + meetingId + '&identity=' + meetingDisplayName;
       }
 
-      var endpoint = process.env.REACT_APP_TOKEN_ENDPOINT || '/token';
-
-      endpoint += '?meetingId=' + meetingId + '&identity=' + identity;
       console.log(endpoint);
       return (
         fetch(endpoint, {

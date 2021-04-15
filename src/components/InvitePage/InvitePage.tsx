@@ -1,0 +1,160 @@
+import React, { ChangeEvent, useEffect } from 'react';
+import { useAppState } from '../../state';
+import { Typography, makeStyles, TextField, Grid, Button, InputLabel, Theme } from '@material-ui/core';
+
+const useStyles = makeStyles((theme: Theme) => ({
+  gutterBottom: {
+    marginBottom: '1em',
+  },
+  inputContainer: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    margin: '1.5em 0 3.5em',
+    '& div:not(:last-child)': {
+      marginRight: '1em',
+    },
+    [theme.breakpoints.down('sm')]: {
+      margin: '1.5em 0 2em',
+    },
+  },
+  textFieldContainer: {
+    width: '100%',
+  },
+  continueButton: {
+    [theme.breakpoints.down('sm')]: {
+      width: '100%',
+    },
+  },
+}));
+
+interface InvitePageScreenProps {
+  userName: string;
+  userEmail: string;
+  roomName: string;
+  setUserName: (userName: string) => void;
+  setUserEmail: (userEmail: string) => void;
+  setRoomName: (roomName: string) => void;
+  handleSubmit: (event: FormEvent<HTMLFormElement>) => void;
+}
+
+const queryString = require('query-string');
+const parsed = queryString.parse(window.location.search);
+
+console.log('hostId: ', parsed.hostId);
+
+export default function InvitePage({
+  userName,
+  userEmail,
+  roomName,
+  setUserName,
+  setUserEmail,
+  setRoomName,
+}: InvitePageScreenProps) {
+  const classes = useStyles();
+  const { user } = useAppState();
+
+  console.log('userName: ', userName);
+  console.log('userEmail: ', userEmail);
+  console.log('roomName: ', roomName);
+
+  const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setUserName(event.target.value);
+  };
+
+  const handleEmailChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setUserEmail(event.target.value);
+  };
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const url =
+      'https://us-central1-coffebreak-a15f1.cloudfunctions.net/updateMeetingInfo' +
+      '?meetingId=' +
+      roomName +
+      '&guestDisplayName=' +
+      userName +
+      '&guestEmail=' +
+      userEmail +
+      '&currentUid=' +
+      parsed.currentUid;
+
+    console.log('url: ', url);
+
+    fetch(url, {
+      method: 'GET',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  };
+
+  function ValidateEmail(mail: string) {
+    if (/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(mail)) {
+      return true;
+    }
+    return false;
+  }
+
+  const hasUsername = !window.location.search.includes('customIdentity=true') && user?.displayName;
+  return (
+    <>
+      <Typography variant="h5" className={classes.gutterBottom}>
+        You have been invited to a coffeeBreak.
+      </Typography>
+      <Typography variant="h5" className={classes.gutterBottom}>
+        Meeting time: {parsed.meetingTime}
+      </Typography>
+      <Typography variant="body1">
+        {hasUsername
+          ? "Enter the name of a room you'd like to join."
+          : 'Enter your name and email so we can send you the invite'}
+      </Typography>
+      <form onSubmit={handleSubmit}>
+        <div className={classes.inputContainer}>
+          {!hasUsername && (
+            <div className={classes.textFieldContainer}>
+              <InputLabel shrink htmlFor="input-user-name">
+                Your Name
+              </InputLabel>
+              <TextField
+                id="input-user-name"
+                variant="outlined"
+                fullWidth
+                size="small"
+                value={userName}
+                onChange={handleNameChange}
+              />
+            </div>
+          )}
+          <div className={classes.textFieldContainer}>
+            <InputLabel shrink htmlFor="input-user-email">
+              Email
+            </InputLabel>
+            <TextField
+              autoCapitalize="false"
+              id="input-user-email"
+              variant="outlined"
+              value={userEmail}
+              fullWidth
+              size="small"
+              onChange={handleEmailChange}
+            />
+          </div>
+        </div>
+        <Grid container justify="flex-end">
+          <Button
+            variant="contained"
+            type="submit"
+            color="primary"
+            disabled={!userName || !ValidateEmail(userEmail)}
+            className={classes.continueButton}
+          >
+            Continue
+          </Button>
+        </Grid>
+      </form>
+    </>
+  );
+}
