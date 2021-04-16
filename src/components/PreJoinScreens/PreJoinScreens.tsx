@@ -2,7 +2,6 @@ import React, { useState, useEffect, FormEvent } from 'react';
 import DeviceSelectionScreen from './DeviceSelectionScreen/DeviceSelectionScreen';
 import IntroContainer from '../IntroContainer/IntroContainer';
 import MediaErrorSnackbar from './MediaErrorSnackbar/MediaErrorSnackbar';
-import PreflightTest from './PreflightTest/PreflightTest';
 import RoomNameScreen from './RoomNameScreen/RoomNameScreen';
 import { useAppState } from '../../state';
 import { useParams } from 'react-router-dom';
@@ -24,7 +23,7 @@ export default function PreJoinScreens() {
   const { URLIdentity } = useParams();
   const { URLMeetingId } = useParams();
   const [step, setStep] = useState(Steps.roomNameStep);
-
+  const [name, setName] = useState<string>(user?.displayName || '');
   const [userName, setUserName] = useState<string>('');
   const [userEmail, setUserEmail] = useState<string>('');
   const [roomName, setRoomName] = useState<string>('');
@@ -89,16 +88,6 @@ export default function PreJoinScreens() {
     }
   };
 
-  const SubContent = (
-    <>
-      {Video.testPreflight && <PreflightTest />}
-      <MediaErrorSnackbar error={mediaError} />
-    </>
-  );
-
-  //console.log({ setUserName })
-  //console.log({ setRoomName })
-
   if (step === Steps.sendInviteStep) {
     return (
       <IntroContainer>
@@ -115,19 +104,20 @@ export default function PreJoinScreens() {
     );
   } else {
     return (
-      <IntroContainer subContent={step === Steps.deviceSelectionStep && SubContent}>
+      <IntroContainer>
+        <MediaErrorSnackbar error={mediaError} />
         {step === Steps.roomNameStep && (
           <RoomNameScreen
-            userName={userName}
+            name={name}
             roomName={roomName}
-            setUserName={setUserName}
+            setName={setName}
             setRoomName={setRoomName}
             handleSubmit={handleSubmit}
           />
         )}
 
         {step === Steps.deviceSelectionStep && (
-          <DeviceSelectionScreen userName={userName} roomName={roomName} setStep={setStep} />
+          <DeviceSelectionScreen name={name} roomName={roomName} setStep={setStep} />
         )}
       </IntroContainer>
     );
