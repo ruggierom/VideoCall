@@ -88,6 +88,8 @@ export default function InvitePage({
         'Content-Type': 'application/json',
       },
     });
+    alert('Invite Sent');
+    window.location = 'https://joincoffeebreak.com';
   };
 
   function ValidateEmail(mail: string) {
