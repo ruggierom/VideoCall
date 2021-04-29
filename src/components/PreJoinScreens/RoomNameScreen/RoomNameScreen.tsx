@@ -28,27 +28,19 @@ const useStyles = makeStyles((theme: Theme) => ({
 }));
 
 interface RoomNameScreenProps {
-  userName: string;
+  name: string;
   roomName: string;
-  setUserName: (userName: string) => void;
+  setName: (name: string) => void;
   setRoomName: (roomName: string) => void;
   handleSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }
 
-export default function RoomNameScreen({
-  userName,
-  roomName,
-  setUserName,
-  setRoomName,
-  handleSubmit,
-}: RoomNameScreenProps) {
+export default function RoomNameScreen({ name, roomName, setName, setRoomName, handleSubmit }: RoomNameScreenProps) {
   const classes = useStyles();
   const { user } = useAppState();
 
-  console.log('userName: ', userName);
-  console.log('roomName: ', roomName);
   const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setUserName(event.target.value);
+    setName(event.target.value);
   };
 
   const handleRoomNameChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -79,7 +71,7 @@ export default function RoomNameScreen({
                 variant="outlined"
                 fullWidth
                 size="small"
-                value={userName}
+                value={name}
                 onChange={handleNameChange}
               />
             </div>
@@ -104,7 +96,7 @@ export default function RoomNameScreen({
             variant="contained"
             type="submit"
             color="primary"
-            disabled={!userName || !roomName}
+            disabled={!name || !roomName}
             className={classes.continueButton}
           >
             Continue

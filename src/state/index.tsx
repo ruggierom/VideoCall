@@ -54,11 +54,13 @@ export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
   } as StateContextType;
 
   if (process.env.REACT_APP_SET_AUTH === 'firebase') {
+    console.log('HERE 1');
     contextValue = {
       ...contextValue,
       ...useFirebaseAuth(), // eslint-disable-line react-hooks/rules-of-hooks
     };
   } else {
+    console.log('HERE 2');
     contextValue = {
       ...contextValue,
       getToken: async (user_identity, room_name) => {

@@ -136,6 +136,7 @@ export default function MainParticipantInfo({ participant, children }: MainParti
 
   function startIfBothConnected() {
     console.log('roomname: ' + room?.name);
+    console.log('localParticipant: ' + room?.localParticipant);
     try {
       if (room?.participants.entries().next().value != undefined) {
         if (
@@ -172,11 +173,6 @@ export default function MainParticipantInfo({ participant, children }: MainParti
 
   function clearStartTime() {
     window.localStorage.clear();
-  }
-
-  function saveStartTime() {
-    window.localStorage.setItem(localParticipant.identity + room?.name, room!.timeMeetingStarted.toString());
-    startTime = room!.timeMeetingStarted;
   }
 
   function formatTime(minutes: number, seconds: number) {

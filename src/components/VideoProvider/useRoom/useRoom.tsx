@@ -45,7 +45,6 @@ export default function useRoom(localTracks: LocalTrack[], onError: Callback, op
 
           // @ts-ignore
           window.twilioRoom = newRoom;
-
           newRoom.localParticipant.videoTracks.forEach(publication =>
             // All video tracks are published with 'low' priority because the video track
             // that is displayed in the 'MainParticipant' component will have it's priority

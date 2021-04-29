@@ -52,7 +52,6 @@ export default function PreJoinScreens() {
           meetingDisplayName = URLIdentity;
         }
       }
-
       setUserName(meetingDisplayName);
       if (URLMeetingId) {
         setRoomName(URLMeetingId);
