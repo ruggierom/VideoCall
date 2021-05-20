@@ -45,7 +45,6 @@ export default function PreJoinScreens() {
         }
       } else {
         names = URLIdentity?.split(' ');
-
         if (names != null && names?.length > 1) {
           meetingDisplayName = names[0] + ' ' + names[1].substring(0, 1) + '.';
         } else {
@@ -116,7 +115,7 @@ export default function PreJoinScreens() {
         )}
 
         {step === Steps.deviceSelectionStep && (
-          <DeviceSelectionScreen name={name} roomName={roomName} setStep={setStep} />
+          <DeviceSelectionScreen userName={userName} roomName={roomName} setStep={setStep} />
         )}
       </IntroContainer>
     );

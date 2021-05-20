@@ -1,5 +1,5 @@
 import React from 'react';
-import { makeStyles, Typography, Grid, Button, Theme, Hidden } from '@material-ui/core';
+import { makeStyles, Typography, Grid, TextField, Button, Theme, Hidden, InputLabel } from '@material-ui/core';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import LocalVideoPreview from './LocalVideoPreview/LocalVideoPreview';
 import SettingsMenu from './SettingsMenu/SettingsMenu';
@@ -94,7 +94,6 @@ export default function DeviceSelectionScreen({ userName, roomName, setStep }: D
       <Typography variant="h5" className={classes.gutterBottom}>
         Join your coffeeBreak
       </Typography>
-
       <Grid container justify="center">
         <Grid item md={7} sm={12} xs={12}>
           <div className={classes.localPreviewContainer}>

@@ -3,6 +3,7 @@ import { Request, Response, Application } from 'express';
 //import express = require('express');
 import * as path from 'path';
 import admin = require('firebase-admin');
+import express = require('express');
 
 const Twilio = require('twilio');
 
@@ -52,12 +53,14 @@ app.get('/token', (req: Request, res: Response) => {
                 try {
                     // See if a room already exists
                     room = client.video.rooms(roomName).fetch();
+                    console.log(room);
                 } catch (e) {
                     try {
                         // If room doesn't exist, create it
                         room = client.video.rooms.create({
                             uniqueName: roomName//, type: 'go'
                         });
+
                     } catch (e) {
                         console.log(e);
                         res.statusCode = 500;
@@ -74,12 +77,12 @@ app.get('/token', (req: Request, res: Response) => {
                 const conversationsClient = client.conversations.services(twilioConversationsServiceSid);
                 try {
                     // See if conversation already exists
-                    conversationsClient.conversations(room.sid).fetch();
+                    conversationsClient.conversations(roomName).fetch();
                     console.log('checking if conversation already exists');
                 } catch (e) {
                     try {
                         // If conversation doesn't exist, create it.
-                        conversationsClient.conversations.create({ uniqueName: room.sid });
+                        conversationsClient.conversations.create({ uniqueName: roomName, 'timers.closed': 'P1D' });
                         console.log('Creating conversation');
                     } catch (e) {
                         console.log(e);
@@ -95,8 +98,8 @@ app.get('/token', (req: Request, res: Response) => {
 
                 try {
                     // Add participant to conversation
-                    conversationsClient.conversations(room.sid).participants.create({ identity: identity });
-                    console.log('Add participant to conversation');
+                    conversationsClient.conversations(roomName).participants.create({ identity: identity });
+                    console.log('Add participant to conversation: ', roomName);
                 } catch (e) {
                     console.log(e);
                     // Ignore "Participant already exists" error (50433)
