@@ -18,7 +18,7 @@ import Countdown, { CountdownRenderProps } from 'react-countdown';
 import Confetti from 'react-confetti';
 import useIsRecording from '../../hooks/useIsRecording/useIsRecording';
 
-const meetingDuration = 90000; //15 min
+const meetingDuration = 900000; //15 min
 const MeetingNotStarted = () => <div>Waiting for other person to join</div>;
 const TwoMinWarn = () => <div className={clsx(useStyles().twoMinWarning)}>{'Less than two minutes remaining!'}</div>;
 var showRemainingTime: Boolean = true;
