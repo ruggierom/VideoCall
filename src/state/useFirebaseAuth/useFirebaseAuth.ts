@@ -43,58 +43,128 @@ export default function useFirebaseAuth() {
       }
 
       console.log(endpoint);
-      return (
-        fetch(endpoint, {
-          //mode: 'no-cors',
-          method: 'GET',
-          headers,
-        })
-          //.then(res => res.json())
-          .then(res => res.text())
-      );
+      return fetch(endpoint, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          user_identity,
+          room_name,
+          create_conversation: process.env.REACT_APP_DISABLE_TWILIO_CONVERSATIONS !== 'true',
+        }),
+      }).then(res => res.json());
     },
     [user]
   );
 
-  useEffect(() => {
-    firebase.initializeApp(firebaseConfig);
-    firebase.auth().onAuthStateChanged(newUser => {
-      setUser(newUser);
-      setIsAuthReady(true);
+  const updateRecordingRules = useCallback(
+    async (room_sid, rules) => {
+      const headers = new window.Headers();
+
+      const idToken = await user!.getIdToken();
+      headers.set('Authorization', idToken);
+      headers.set('content-type', 'application/json');
+
+      return fetch('/recordingrules', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ room_sid, rules }),
+      }).then(async res => {
+        const jsonResponse = await res.json();
+
+        if (!res.ok) {
+          const recordingError = new Error(
+            jsonResponse.error?.message || 'There was an error updating recording rules'
+          );
+          recordingError.code = jsonResponse.error?.code;
+          return Promise.reject(recordingError);
+        }
+
+        return jsonResponse;
+      });
+    },
+    [user]
+  );
+
+  return fetch(endpoint, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      user_identity,
+      room_name,
+      create_conversation: process.env.REACT_APP_DISABLE_TWILIO_CONVERSATIONS !== 'true',
+    }),
+  }).then(res => res.json());
+},
+[user]
+  );
+
+const updateRecordingRules = useCallback(
+  async (room_sid, rules) => {
+    const headers = new window.Headers();
+
+    const idToken = await user!.getIdToken();
+    headers.set('Authorization', idToken);
+    headers.set('content-type', 'application/json');
+
+    return fetch('/recordingrules', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ room_sid, rules }),
+    }).then(async res => {
+      const jsonResponse = await res.json();
+
+      if (!res.ok) {
+        const recordingError = new Error(
+          jsonResponse.error?.message || 'There was an error updating recording rules'
+        );
+        recordingError.code = jsonResponse.error?.code;
+        return Promise.reject(recordingError);
+      }
+
+      return jsonResponse;
     });
-  }, []);
+  },
+  [user]
+);
 
-  const googleSignIn = useCallback(() => {
-    const provider = new firebase.auth.GoogleAuthProvider();
+useEffect(() => {
+  firebase.initializeApp(firebaseConfig);
+  firebase.auth().onAuthStateChanged(newUser => {
+    setUser(newUser);
+    setIsAuthReady(true);
+  });
+}, []);
 
-    provider.addScope('https://www.googleapis.com/auth/plus.login');
+const googleSignIn = useCallback(() => {
+  const provider = new firebase.auth.GoogleAuthProvider();
 
-    return firebase
-      .auth()
-      .signInWithPopup(provider)
-      .then(newUser => {
-        setUser(newUser.user);
-      });
-  }, []);
+  provider.addScope('https://www.googleapis.com/auth/plus.login');
 
-  const emailSignIn = useCallback(() => {
-    const provider = new firebase.auth.EmailAuthProvider();
+  return firebase
+    .auth()
+    .signInWithPopup(provider)
+    .then(newUser => {
+      setUser(newUser.user);
+    });
+}, []);
 
-    return firebase
-      .auth()
-      .signInWithPopup(provider)
-      .then(newUser => {
-        setUser(newUser.user);
-      });
-  }, []);
-  const signOut = useCallback(() => {
-    return firebase
-      .auth()
-      .signOut()
-      .then(() => {
-        setUser(null);
-      });
-  }, []);
+const emailSignIn = useCallback(() => {
+  const provider = new firebase.auth.EmailAuthProvider();
 
-  return { user, signIn: emailSignIn, googleSignIn, signOut, isAuthReady, getToken };
-}
+  return firebase
+    .auth()
+    .signInWithPopup(provider)
+    .then(newUser => {
+      setUser(newUser.user);
+    });
+}, []);
+const signOut = useCallback(() => {
+  return firebase
+    .auth()
+    .signOut()
+    .then(() => {
+      setUser(null);
+    });
+}, []);
+
+return { user, signIn: emailSignIn, googleSignIn, signOut, isAuthReady, getToken, updateRecordingRules };
