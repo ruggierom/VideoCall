@@ -2,7 +2,6 @@ import React from 'react';
 import clsx from 'clsx';
 import { makeStyles, Theme } from '@material-ui/core/styles';
 import { LocalAudioTrack, LocalVideoTrack, Participant, RemoteAudioTrack, RemoteVideoTrack } from 'twilio-video';
-
 import AudioLevelIndicator from '../AudioLevelIndicator/AudioLevelIndicator';
 import AvatarIcon from '../../icons/AvatarIcon';
 import NetworkQualityLevel from '../NetworkQualityLevel/NetworkQualityLevel';
@@ -15,10 +14,9 @@ import usePublications from '../../hooks/usePublications/usePublications';
 import useScreenShareParticipant from '../../hooks/useScreenShareParticipant/useScreenShareParticipant';
 import useTrack from '../../hooks/useTrack/useTrack';
 import useVideoContext from '../../hooks/useVideoContext/useVideoContext';
-import useParticipantIsReconnecting from '../../hooks/useParticipantIsReconnecting/useParticipantIsReconnecting';
-import AudioLevelIndicator from '../AudioLevelIndicator/AudioLevelIndicator';
 import Countdown, { CountdownRenderProps } from 'react-countdown';
 import Confetti from 'react-confetti';
+import useIsRecording from '../../hooks/useIsRecording/useIsRecording';
 
 const meetingDuration = 90000; //15 min
 const MeetingNotStarted = () => <div>Waiting for other person to join</div>;
@@ -169,7 +167,7 @@ export default function MainParticipantInfo({ participant, children }: MainParti
     const handle = setTimeout(() => {
       try {
         room?.disconnect();
-      } catch (e) { }
+      } catch (e) {}
       clearStartTime();
     }, 8000);
   }

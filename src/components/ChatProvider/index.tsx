@@ -32,9 +32,8 @@ export const ChatProvider: React.FC = ({ children }) => {
           window.chatClient = client;
           setChatClient(client);
         })
-        .catch(e => {
-          console.log(e);
-          onError(new Error("There was a problem connecting to Twilio's conversation service."));
+        .catch(() => {
+          //onError(new Error("There was a problem connecting to Twilio's conversation service."));
         });
     },
     [onError]
@@ -65,17 +64,18 @@ export const ChatProvider: React.FC = ({ children }) => {
 
   useEffect(() => {
     if (room && chatClient) {
-      console.log('dsdsds');
+      console.log('Room SID: ', room?.sid);
+      console.log('Room Name: ', room?.name);
+
       chatClient
-        .getConversationBySid(room.sid)
         //.getConversationByUniqueName(room.name)
+        .getConversationByUniqueName(room.sid)
         .then(newConversation => {
           //@ts-ignore
           window.chatConversation = newConversation;
           setConversation(newConversation);
         })
-        .catch(e => {
-          console.log(e);
+        .catch(() => {
           //onError(new Error('There was a problem getting the Conversation associated with this room.'));
         });
     }

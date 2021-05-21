@@ -28,7 +28,7 @@ export default function SettingsMenu({ mobileButtonClass }: { mobileButtonClass?
   const [connectionSettingsOpen, setConnectionSettingsOpen] = useState(false);
 
   const anchorRef = useRef<HTMLButtonElement>(null);
-  roomType = 'go';
+  roomType = 'group-small';
 
   return (
     <>
