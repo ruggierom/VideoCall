@@ -16,7 +16,8 @@ import useTrack from '../../hooks/useTrack/useTrack';
 import useVideoContext from '../../hooks/useVideoContext/useVideoContext';
 import Countdown, { CountdownRenderProps } from 'react-countdown';
 import Confetti from 'react-confetti';
-import useIsRecording from '../../hooks/useIsRecording/useIsRecording';
+import firebase from 'firebase/app';
+import 'firebase/firestore';
 
 const meetingDuration = 900000; //15 min
 const MeetingNotStarted = () => <div>Waiting for other person to join</div>;
@@ -24,6 +25,7 @@ const TwoMinWarn = () => <div className={clsx(useStyles().twoMinWarning)}>{'Less
 var showRemainingTime: Boolean = true;
 var showTwoMinWarning: Boolean = false;
 var showWaiting: Boolean = true;
+var startTime = 0;
 
 const useStyles = makeStyles((theme: Theme) => ({
   '@keyframes blinker': {
@@ -102,22 +104,6 @@ const useStyles = makeStyles((theme: Theme) => ({
       transform: 'scale(2)',
     },
   },
-  recordingIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    display: 'flex',
-    alignItems: 'center',
-    background: 'rgba(0, 0, 0, 0.5)',
-    color: 'white',
-    padding: '0.1em 0.3em 0.1em 0',
-    fontSize: '1.2rem',
-    height: '28px',
-    [theme.breakpoints.down('sm')]: {
-      bottom: 'auto',
-      right: 0,
-      top: 0,
-    },
-  },
   circle: {
     height: '12px',
     width: '12px',
@@ -161,18 +147,16 @@ export default function MainParticipantInfo({ participant, children }: MainParti
   const audioTrack = useTrack(audioPublication) as LocalAudioTrack | RemoteAudioTrack | undefined;
   const isVideoSwitchedOff = useIsTrackSwitchedOff(videoTrack as LocalVideoTrack | RemoteVideoTrack);
   const isParticipantReconnecting = useParticipantIsReconnecting(participant);
-  var startTime = 0;
 
   function shutDown() {
     const handle = setTimeout(() => {
       try {
         room?.disconnect();
       } catch (e) {}
-      clearStartTime();
     }, 8000);
   }
 
-  function startIfBothConnected() {
+  async function startIfBothConnected() {
     console.log('roomname: ' + room?.name);
     console.log('localParticipant: ' + room?.localParticipant);
     try {
@@ -181,9 +165,9 @@ export default function MainParticipantInfo({ participant, children }: MainParti
           room?.participants.entries().next().value[1].state === 'connected' &&
           localParticipant.state === 'connected'
         ) {
-          //if (room?.participants && localParticipant.state === 'connected') {
-          setStartTime();
+          await setStartTime();
           showWaiting = false;
+          return renderMeetingInfo();
         } else {
           showWaiting = true;
           console.log('remote: ', room?.participants.entries().next().value[1].state);
@@ -197,20 +181,39 @@ export default function MainParticipantInfo({ participant, children }: MainParti
 
   startIfBothConnected();
 
-  function setStartTime() {
-    const temp = window.localStorage.getItem(localParticipant.identity + room?.name);
-    if (temp != null) {
-      startTime = Number(temp);
-      console.log('got time from local storage');
-    } else {
-      startTime = Date.now();
-      console.log('reset time');
-      window.localStorage.setItem(localParticipant.identity + room?.name, startTime.toString());
-    }
-  }
+  async function setStartTime() {
+    try {
+      const docRef = firebase
+        .firestore()
+        .collection('meetingStartInfo')
+        .doc(room?.name);
 
-  function clearStartTime() {
-    window.localStorage.clear();
+      await docRef.get().then(doc => {
+        if (doc.exists) {
+          startTime = Number(doc.data()['startTime']);
+          showWaiting = false;
+          showRemainingTime = true;
+        } else {
+          startTime = Date.now();
+          firebase
+            .firestore()
+            .collection('meetingStartInfo')
+            .doc(room?.name)
+            .set({
+              startTime: startTime,
+            })
+            .then(() => {
+              startTime = Date.now();
+            })
+            .catch(error => {
+              console.error('Error writing document: ', error);
+            });
+        }
+        showWaiting = false;
+      });
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   function formatTime(minutes: number, seconds: number) {
@@ -270,61 +273,50 @@ export default function MainParticipantInfo({ participant, children }: MainParti
     return <span>Remaining time: {formatTime(minutes, seconds)}</span>;
   };
 
-  const isRecording = useIsRecording();
+  function renderMeetingInfo() {
+    return (
+      <div
+        data-cy-main-participant
+        data-cy-participant={participant.identity}
+        className={clsx(classes.container, {
+          [classes.fullWidth]: !isRemoteParticipantScreenSharing,
+        })}
+      >
+        <div className={classes.infoContainer}>
+          <div className={classes.identity}>
+            <img width="50px" height="50px" src="../../../coffeeBreak.png"></img>
+            <AudioLevelIndicator audioTrack={audioTrack} />
 
-  return (
-    <div
-      data-cy-main-participant
-      data-cy-participant={participant.identity}
-      className={clsx(classes.container, {
-        [classes.fullWidth]: !isRemoteParticipantScreenSharing,
-      })}
-    >
-      <div className={classes.infoContainer}>
-        <div className={classes.identity}>
-          <img width="50px" height="50px" src="../../../coffeeBreak.png"></img>
-          <AudioLevelIndicator audioTrack={audioTrack} />
+            <Typography component={'span'} variant="body1" color="inherit">
+              {participant.identity}
+              <div>{isLocal && '(You)'}</div>
 
-          <Typography component={'span'} variant="body1" color="inherit">
-            {participant.identity}
-            <div>{isLocal && '(You)'}</div>
+              {showWaiting && <MeetingNotStarted />}
 
-            {showWaiting && <MeetingNotStarted />}
-
-            {showRemainingTime && startTime > 0 && (
-              <div style={{ fontFamily: 'inherit', marginTop: '.25em', marginBottom: '.75em' }}>
-                <Countdown date={startTime + meetingDuration} renderer={renderer} />
-              </div>
-            )}
-          </Typography>
+              {showRemainingTime && startTime > 0 && (
+                <div style={{ fontFamily: 'inherit', marginTop: '.25em', marginBottom: '.75em' }}>
+                  <Countdown date={startTime + meetingDuration} renderer={renderer} />
+                </div>
+              )}
+            </Typography>
+          </div>
         </div>
-        {isRecording && (
-          <Tooltip
-            title="All participants' audio and video is currently being recorded. Visit the app settings to stop recording."
-            placement="top"
-          >
-            <div className={classes.recordingIndicator}>
-              <div className={classes.circle}></div>
-              <Typography variant="body1" color="inherit" data-cy-recording-indicator>
-                Recording
-              </Typography>
-            </div>
-          </Tooltip>
+        {(!isVideoEnabled || isVideoSwitchedOff) && (
+          <div className={classes.avatarContainer}>
+            <AvatarIcon />
+          </div>
         )}
+        {isParticipantReconnecting && (
+          <div className={classes.reconnectingContainer}>
+            <Typography component={'span'} variant="body1" style={{ color: 'white' }}>
+              Reconnecting...
+            </Typography>
+          </div>
+        )}
+        {children}
       </div>
-      {(!isVideoEnabled || isVideoSwitchedOff) && (
-        <div className={classes.avatarContainer}>
-          <AvatarIcon />
-        </div>
-      )}
-      {isParticipantReconnecting && (
-        <div className={classes.reconnectingContainer}>
-          <Typography component={'span'} variant="body1" style={{ color: 'white' }}>
-            Reconnecting...
-          </Typography>
-        </div>
-      )}
-      {children}
-    </div>
-  );
+    );
+  }
+
+  return renderMeetingInfo();
 }
