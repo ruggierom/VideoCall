@@ -1,0 +1,65 @@
+import React from 'react';
+import WelcomeScreen from './WelcomeScreen';
+import { shallow } from 'enzyme';
+import { TextField } from '@material-ui/core';
+import { useAppState } from '../../../state';
+
+jest.mock('../../../state');
+const mockUseAppState = useAppState as jest.Mock<any>;
+
+describe('the WelcomeScreen component', () => {
+  it('should render correctly when there is no logged in user', () => {
+    mockUseAppState.mockImplementationOnce(() => ({ user: undefined }));
+    const wrapper = shallow(
+      <WelcomeScreen
+        name="test"
+        roomName="testRoom"
+        setName={() => {}}
+        setRoomName={() => {}}
+        handleSubmit={() => {}}
+      />
+    );
+
+    expect(wrapper.text()).toContain("Enter your name and the name of a room you'd like to join");
+    expect(wrapper.find(TextField).length).toBe(2);
+  });
+
+  it('should render correctly when there is a logged in user', () => {
+    mockUseAppState.mockImplementationOnce(() => ({ user: { displayName: 'Test Name' } }));
+    const wrapper = shallow(
+      <WelcomeScreen
+        name="test"
+        roomName="testRoom"
+        setName={() => {}}
+        setRoomName={() => {}}
+        handleSubmit={() => {}}
+      />
+    );
+
+    expect(wrapper.text()).toContain("Enter the name of a room you'd like to join");
+    expect(wrapper.find(TextField).length).toBe(1);
+  });
+
+  it('should render correctly when there is a logged in user and "customIdentity=true" query parameter"', () => {
+    mockUseAppState.mockImplementationOnce(() => ({ user: { displayName: 'Test Name' } }));
+
+    delete window.location;
+    // @ts-ignore
+    window.location = {
+      search: 'customIdentity=true',
+    };
+
+    const wrapper = shallow(
+      <WelcomeScreen
+        name="test"
+        roomName="testRoom"
+        setName={() => {}}
+        setRoomName={() => {}}
+        handleSubmit={() => {}}
+      />
+    );
+
+    expect(wrapper.text()).toContain("Enter your name and the name of a room you'd like to join");
+    expect(wrapper.find(TextField).length).toBe(2);
+  });
+});
