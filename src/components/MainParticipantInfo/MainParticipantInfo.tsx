@@ -19,6 +19,7 @@ import Confetti from 'react-confetti';
 import firebase from 'firebase/app';
 import 'firebase/firestore';
 
+//const meetingDuration = 900;
 const meetingDuration = 900000; //15 min
 const MeetingNotStarted = () => <div>Waiting for other person to join</div>;
 const TwoMinWarn = () => <div className={clsx(useStyles().twoMinWarning)}>{'Less than two minutes remaining!'}</div>;
@@ -151,6 +152,7 @@ export default function MainParticipantInfo({ participant, children }: MainParti
   function shutDown() {
     const handle = setTimeout(() => {
       try {
+        window.sessionStorage.setItem('meetingStatus', 'Complete');
         room?.disconnect();
       } catch (e) {}
     }, 8000);

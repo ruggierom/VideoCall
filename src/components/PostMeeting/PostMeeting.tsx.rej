@@ -1,0 +1,4 @@
+diff a/src/components/PostMeeting/PostMeeting.tsx b/src/components/PostMeeting/PostMeeting.tsx	(rejected hunks)
+@@ -140 +139 @@ export default function AnonUserPostMeetingPage() {
+-                    window.open("/login");
++                    window.open('/login');

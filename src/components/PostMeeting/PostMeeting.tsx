@@ -136,7 +136,7 @@ export default function AnonUserPostMeetingPage() {
                   variant="contained"
                   type="submit"
                   onClick={() => {
-                    window.open('/login');
+                    window.open('/login', '_self');
                   }}
                   color="primary"
                   className={classes.continueButton}

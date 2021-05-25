@@ -103,7 +103,7 @@ describe('the DeviceSelectionScreen component', () => {
     expect(wrapper.find({ children: 'Join Now' }).prop('disabled')).toBe(false);
   });
 
-  it('should go back to the RoomNameScreen when the Cancel button is clicked', () => {
+  it('should go back to the WelcomeScreen when the Cancel button is clicked', () => {
     const mockSetStep = jest.fn();
     const wrapper = shallow(<DeviceSelectionScreen name="test name" roomName="test room name" setStep={mockSetStep} />);
     wrapper.find({ children: 'Cancel' }).simulate('click');

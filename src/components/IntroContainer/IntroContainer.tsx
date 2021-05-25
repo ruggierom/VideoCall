@@ -23,6 +23,7 @@ const useStyles = makeStyles((theme: Theme) => ({
     display: 'flex',
     width: '888px',
     height: '500px',
+
     borderRadius: '8px',
     boxShadow: '0px 2px 4px 0px rgba(40, 42, 43, 0.3)',
     overflow: 'hidden',
@@ -43,13 +44,14 @@ const useStyles = makeStyles((theme: Theme) => ({
     justifyContent: 'center',
     backgroundImage: Swoosh,
     backgroundSize: 'cover',
-    width: '296px',
+    width: '206px',
     [theme.breakpoints.down('sm')]: {
       width: '100%',
       height: '100px',
       backgroundPositionY: '140px',
     },
   },
+
   logoContainer: {
     position: 'absolute',
     width: '210px',
@@ -65,10 +67,11 @@ const useStyles = makeStyles((theme: Theme) => ({
     },
   },
   twilioLogo: {
-    position: 'absolute',
+    position: 'relative',
     top: 0,
+    width: 200,
+    height: 200,
     left: 0,
-    margin: '20px',
   },
   content: {
     background: 'white',
@@ -100,11 +103,17 @@ const IntroContainer = (props: IntroContainerProps) => {
 
   return (
     <div className={classes.background}>
+      <div className={classes.logoContainer}></div>
       {user && location.pathname !== '/login' && <UserMenu />}
       <div className={classes.container}>
         <div className={classes.innerContainer}>
           <div className={classes.swooshContainer}>
-            <div className={classes.logoContainer}></div>
+            <div className={classes.logoContainer}>
+              <VideoLogo />
+              <Typography variant="h6" className={classes.title}>
+                coffeeBreaks
+              </Typography>
+            </div>
           </div>
           <div className={classes.content}>{props.children}</div>
         </div>

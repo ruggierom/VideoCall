@@ -52,7 +52,6 @@ export default function useFirebaseAuth() {
   );
 
   useEffect(() => {
-    firebase.initializeApp(firebaseConfig);
     firebase.auth().onAuthStateChanged(newUser => {
       setUser(newUser);
       setIsAuthReady(true);

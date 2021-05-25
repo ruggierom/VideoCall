@@ -17,6 +17,7 @@ import { VideoProvider } from './components/VideoProvider';
 import useConnectionOptions from './utils/useConnectionOptions/useConnectionOptions';
 import UnsupportedBrowserWarning from './components/UnsupportedBrowserWarning/UnsupportedBrowserWarning';
 import InvitePage from './components/InvitePage/InvitePage';
+import WelcomeScreen from './components/PreJoinScreens/WelcomeScreen/WelcomeScreen';
 
 const VideoApp = () => {
   const { error, setError } = useAppState();
@@ -45,6 +46,9 @@ ReactDOM.render(
             <Route path="/meetingId/:URLMeetingId/identity/:URLIdentity">
               <VideoApp />
             </Route>
+            <Route path="/welcome">
+              <WelcomeScreen />
+            </Route>
             <Route path="/login">
               <LoginPage />
             </Route>
@@ -54,6 +58,7 @@ ReactDOM.render(
             <Redirect to="/" />
           </Switch>
         </AppStateProvider>
+        ``
       </Router>
     </UnsupportedBrowserWarning>
   </MuiThemeProvider>,

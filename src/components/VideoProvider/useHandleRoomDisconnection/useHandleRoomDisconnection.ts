@@ -18,6 +18,7 @@ export default function useHandleRoomDisconnection(
           onError(error);
         }
 
+        console.log('**********HERE**********');
         removeLocalAudioTrack();
         removeLocalVideoTrack();
         if (isSharingScreen) {

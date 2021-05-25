@@ -1,14 +1,16 @@
 import React, { useState, useEffect, FormEvent } from 'react';
+import { useHistory } from 'react-router-dom';
 import DeviceSelectionScreen from './DeviceSelectionScreen/DeviceSelectionScreen';
 import IntroContainer from '../IntroContainer/IntroContainer';
 import MediaErrorSnackbar from './MediaErrorSnackbar/MediaErrorSnackbar';
-import RoomNameScreen from './RoomNameScreen/RoomNameScreen';
+import WelcomeScreen from './WelcomeScreen/WelcomeScreen';
 import { useAppState } from '../../state';
 import { useParams } from 'react-router-dom';
 import useVideoContext from '../../hooks/useVideoContext/useVideoContext';
 import Video from 'twilio-video';
 import InvitePage from '../InvitePage/InvitePage';
 import { AlertPage } from 'twilio/lib/rest/monitor/v1/alert';
+import AnonUserPostMeetingPage from '../PostMeeting/PostMeeting';
 
 export enum Steps {
   roomNameStep,
@@ -17,6 +19,7 @@ export enum Steps {
 }
 
 export default function PreJoinScreens() {
+  let history = useHistory();
   const { user } = useAppState();
   const { getAudioAndVideoTracks } = useVideoContext();
 
@@ -76,7 +79,6 @@ export default function PreJoinScreens() {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
     if (step !== Steps.sendInviteStep) {
       // If this app is deployed as a twilio function, don't change the URL because routing isn't supported.
       if (!window.location.origin.includes('twil.io')) {
@@ -101,11 +103,18 @@ export default function PreJoinScreens() {
       </IntroContainer>
     );
   } else {
+    const status = window.sessionStorage.getItem('meetingStatus');
+
+    if (status === 'Complete') {
+      //window.sessionStorage.setItem("meetingStatus", "");
+      return <AnonUserPostMeetingPage />;
+    }
+
     return (
       <IntroContainer>
         <MediaErrorSnackbar error={mediaError} />
         {step === Steps.roomNameStep && (
-          <RoomNameScreen
+          <WelcomeScreen
             name={name}
             roomName={roomName}
             setName={setName}
