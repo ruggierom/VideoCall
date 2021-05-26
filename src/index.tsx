@@ -46,19 +46,17 @@ ReactDOM.render(
             <Route path="/meetingId/:URLMeetingId/identity/:URLIdentity">
               <VideoApp />
             </Route>
-            <Route path="/welcome">
-              <WelcomeScreen />
-            </Route>
             <Route path="/login">
               <LoginPage />
             </Route>
             <Route path="/invite/meetingId/:URLMeetingId/identity/:URLIdentity">
               <VideoApp />
             </Route>
-            <Redirect to="/" />
+            <Route path="/">
+              <LoginPage />
+            </Route>
           </Switch>
         </AppStateProvider>
-        ``
       </Router>
     </UnsupportedBrowserWarning>
   </MuiThemeProvider>,

@@ -24,6 +24,7 @@ const twilioAccountSid = 'AC48971261e37cd90ce1bb554af65efac2';
 const twilioApiKeySID = 'SK5427e8719bad205c94c833fdbdfe21e2';
 const twilioApiKeySecret = 'z731qFsLvYaL2GLOKEnjyZBBgVHd7pnX';
 const twilioConversationsServiceSid = 'IS77c9edd3c0a44e60a328b3fac4c2da08';
+const testMeetingRoom = 'test99';
 
 const client = Twilio(twilioApiKeySID, twilioApiKeySecret, {
     accountSid: twilioAccountSid,
@@ -42,11 +43,16 @@ app.get('/token', (req: Request, res: Response) => {
 
     docRef.get()
         .then(async doc => {
-            if (!doc.exists) {
+            if (!doc.exists && meetingId != testMeetingRoom) {
                 console.log('No such document!');
                 retVal = false;
             } else {
-                roomName = doc?.data()!.roomName.toString();
+                if (meetingId == testMeetingRoom) {
+                    roomName = testMeetingRoom;
+                } else {
+                    roomName = doc?.data()!.roomName.toString();
+                }
+
                 console.log("roomName: ", roomName);
                 retVal = true;
 

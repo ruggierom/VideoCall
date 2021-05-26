@@ -18,15 +18,18 @@ import Countdown, { CountdownRenderProps } from 'react-countdown';
 import Confetti from 'react-confetti';
 import firebase from 'firebase/app';
 import 'firebase/firestore';
+import { request } from 'express';
 
 //const meetingDuration = 900;
-const meetingDuration = 900000; //15 min
+var meetingDuration = 900000; //15 min
 const MeetingNotStarted = () => <div>Waiting for other person to join</div>;
 const TwoMinWarn = () => <div className={clsx(useStyles().twoMinWarning)}>{'Less than two minutes remaining!'}</div>;
 var showRemainingTime: Boolean = true;
 var showTwoMinWarning: Boolean = false;
 var showWaiting: Boolean = true;
 var startTime = 0;
+const queryString = require('query-string');
+const parsed = queryString.parse(window.location.search);
 
 const useStyles = makeStyles((theme: Theme) => ({
   '@keyframes blinker': {
@@ -149,6 +152,31 @@ export default function MainParticipantInfo({ participant, children }: MainParti
   const isVideoSwitchedOff = useIsTrackSwitchedOff(videoTrack as LocalVideoTrack | RemoteVideoTrack);
   const isParticipantReconnecting = useParticipantIsReconnecting(participant);
 
+  function setDurationFromQueryString() {
+    if (room?.name === 'test99' && parsed.duration) {
+      clearStartTimeFromDb();
+      meetingDuration = Number(parsed.duration);
+    }
+  }
+
+  function clearStartTimeFromDb() {
+    try {
+      const docRef = firebase
+        .firestore()
+        .collection('meetingStartInfo')
+        .doc(room?.name)
+        .delete()
+        .then(() => {
+          console.log('Document successfully deleted!');
+        })
+        .catch(error => {
+          console.error('Error removing document: ', error);
+        });
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   function shutDown() {
     const handle = setTimeout(() => {
       try {
@@ -161,6 +189,9 @@ export default function MainParticipantInfo({ participant, children }: MainParti
   async function startIfBothConnected() {
     console.log('roomname: ' + room?.name);
     console.log('localParticipant: ' + room?.localParticipant);
+
+    setDurationFromQueryString();
+
     try {
       if (room?.participants.entries().next().value != undefined) {
         if (
@@ -180,6 +211,9 @@ export default function MainParticipantInfo({ participant, children }: MainParti
       console.log(e);
     }
   }
+
+  console.log('GHGGGJKGJKGJKGJGJGJGJKGJGJKGJGJGJKHGJKGJHKGKJGJ');
+  setDurationFromQueryString();
 
   startIfBothConnected();
 
@@ -276,6 +310,7 @@ export default function MainParticipantInfo({ participant, children }: MainParti
   };
 
   function renderMeetingInfo() {
+    const imgUrl = process.env.PUBLIC_URL + '/coffeeBreak.png';
     return (
       <div
         data-cy-main-participant
@@ -286,7 +321,7 @@ export default function MainParticipantInfo({ participant, children }: MainParti
       >
         <div className={classes.infoContainer}>
           <div className={classes.identity}>
-            <img width="50px" height="50px" src="../../../coffeeBreak.png"></img>
+            <img width="50px" id="3" height="50px" src={imgUrl}></img>
             <AudioLevelIndicator audioTrack={audioTrack} />
 
             <Typography component={'span'} variant="body1" color="inherit">

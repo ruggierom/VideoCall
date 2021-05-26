@@ -142,12 +142,13 @@ const IntroContainer = (props: IntroContainerProps) => {
   const classes = useStyles();
   const { user } = useAppState();
   const location = useLocation();
+  const imgUrl = process.env.PUBLIC_URL + '/coffeeBreak.png';
 
   return (
     <div className={classes.background}>
       {user && location.pathname !== '/login' && <UserMenu />}
       <a href="/">
-        <img className={classes.twilioLogo} src={'../../../coffeeBreak.png'}></img>
+        <img id="1" className={classes.twilioLogo} src={imgUrl}></img>
       </a>
       <div className={classes.container}>
         <div className={classes.innerContainer}>

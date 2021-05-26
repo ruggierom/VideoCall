@@ -96,6 +96,7 @@ export default function AnonUserPostMeetingPage() {
 
   function renderForm() {
     console.log('userNameAvaialbe: ', userNameAvaialbe);
+
     return (
       <IntroContainer>
         <Typography variant="h5" className={classes.content}>

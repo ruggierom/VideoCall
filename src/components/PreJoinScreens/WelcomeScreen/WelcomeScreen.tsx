@@ -17,16 +17,23 @@ import Alert from '@material-ui/lab/Alert';
 import IconButton from '@material-ui/core/IconButton';
 import Collapse from '@material-ui/core/Collapse';
 import CloseIcon from '@material-ui/icons/Close';
+import { useWindowScroll } from 'react-use';
 
 const useStyles = makeStyles((theme: Theme) => ({
   root: {
     width: '100%',
+    maxHeight: '350px',
+    overflow: 'auto',
     '& > * + *': {
       marginTop: theme.spacing(2),
     },
   },
   spacer: {
     margin: '100px',
+    textAlign: 'center',
+  },
+  list: {
+    maxHeight: '100px',
   },
   gutterBottom: {
     marginBottom: '1em',
@@ -42,11 +49,9 @@ const useStyles = makeStyles((theme: Theme) => ({
       margin: '1.5em 0 2em',
     },
   },
+  displayText: {},
   textFieldContainer: {
     width: '100%',
-  },
-  spacer: {
-    textAlign: 'center',
   },
   continueButton: {
     [theme.breakpoints.down('sm')]: {},
@@ -65,7 +70,7 @@ const useStyles = makeStyles((theme: Theme) => ({
     textAlign: 'center',
   },
   listSubHeader: {
-    margin: '1em',
+    margin: '.5em',
     textAlign: 'center',
     fontSize: '1.5em',
   },
@@ -100,6 +105,18 @@ export default function WelcomeScreen() {
     }
   }, []);
 
+  function gotoMeeting(meeting: firestore.DocumentData) {
+    const min = meeting.startDateTimeAsDate.toMillis() - 5 * 60 * 1000;
+    const max = meeting.startDateTimeAsDate.toMillis() + 40 * 60 * 1000;
+    const nowInMil = Date.now();
+
+    if (nowInMil >= min && nowInMil <= max) {
+      window.open(meeting.guestMeetingUrl, '_self');
+    } else {
+      setError(true);
+    }
+  }
+
   function getUserMeetings() {
     var temp = Array<firestore.DocumentData>();
     const db = firebase.firestore();
@@ -110,9 +127,11 @@ export default function WelcomeScreen() {
       .get()
       .then(querySnapshot => {
         querySnapshot.forEach(doc => {
-          const d = new Date(doc.data()['startDateTime']);
-          if (d > new Date()) {
+          const d = doc.data()['startDateTimeAsDate'];
+
+          if (d.toMillis() > Date.now()) {
             const temp2 = doc.data();
+            console.log(temp2);
 
             if (!temp2['guestPhoto']) {
               temp2.guestPhoto = '';
@@ -120,9 +139,9 @@ export default function WelcomeScreen() {
               console.log(temp2.guestPhoto);
             }
 
-            if (temp2.status === 'Accepted') {
-              temp.push(temp2);
-            }
+            //if (temp2.status === 'Accepted') {
+            temp.push(temp2);
+            //}
           }
         });
         setUserMeetings(temp);
@@ -145,17 +164,6 @@ export default function WelcomeScreen() {
     }
   }
 
-  function gotoMeeting(meeting: firestore.DocumentData) {
-    const min = meeting.startDateTimeAsDate + -(5 * 60 * 1000);
-    const max = meeting.startDateTimeAsDate + 20 * 60 * 1000;
-
-    if (Date() >= min && Date() <= max) {
-      window.open(meeting.guestMeetingUrl, '_self');
-    } else {
-      setError(true);
-    }
-  }
-
   function isUserLoggedIn() {
     var user = firebase.auth().currentUser;
 
@@ -169,71 +177,63 @@ export default function WelcomeScreen() {
   const classes = useStyles();
   const { user } = useAppState();
 
-  const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setName(event.target.value);
-  };
-
-  const handleRoomNameChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setRoomName(event.target.value);
-  };
-
   const hasUsername = !window.location.search.includes('customIdentity=true') && user?.displayName;
   const items = [];
   var count = 0;
 
   return (
     <>
-      {isUserLoggedIn() && (
+      {error && (
+        <Alert
+          severity="info"
+          action={
+            <IconButton
+              aria-label="close"
+              color="inherit"
+              size="small"
+              onClick={() => {
+                setError(false);
+              }}
+            >
+              <CloseIcon fontSize="inherit" />
+            </IconButton>
+          }
+        >
+          It's too early to join. Please come back within 5 minutes of meeting start time.
+        </Alert>
+      )}
+
+      {isUserLoggedIn() && userMeetings.length === 0 && (
         <div>
-          {userMeetings.length === 0 && (
-            <Typography variant="h6" className={classes.displayText}>
-              <div className={classes.content}>No coffeeBreaks scheduled.</div>
-              <div className={classes.content}>Create one in the app!</div>
-            </Typography>
-          )}
+          <Typography variant="h5" className={classes.displayText}>
+            <div className={classes.content}>No coffeeBreaks scheduled.</div>
+            <div className={classes.content}>Go to the app to schedule one</div>
+          </Typography>
+        </div>
+      )}
 
-          {error && (
-            <Alert
-              severity="info"
-              action={
-                <IconButton
-                  aria-label="close"
-                  color="inherit"
-                  size="small"
-                  onClick={() => {
-                    setError(false);
-                  }}
-                >
-                  <CloseIcon fontSize="inherit" />
-                </IconButton>
-              }
-            >
-              It's too early to join. Please come back within 5 minutes of meeting start time.
-            </Alert>
-          )}
-
-          {userMeetings.length > 0 && (
-            <List
-              subheader={
-                <ListSubHeader className={classes.listSubHeader} component="div" id="nested-list-subheader">
-                  Upcoming coffeeBreaks
-                </ListSubHeader>
-              }
-              className={classes.root}
-            >
-              <div className={classes.spacer}></div>
-              {userMeetings.map(meeting => {
-                return (
-                  <ListItem button onClick={() => gotoMeeting(meeting)} key={count++} className={classes.listItem}>
-                    <ListItemAvatar>
-                      <Avatar alt={getDisplayName(meeting)} src={getPhoto(meeting)}></Avatar>
-                    </ListItemAvatar>
-                    <ListItemText primary={getDisplayName(meeting)} secondary={meeting.startDateTime} />
-                  </ListItem>
-                );
-              })}
-            </List>
-          )}
+      {userMeetings.length > 0 && (
+        <div>
+          <List
+            subheader={
+              <ListSubHeader className={classes.listSubHeader} component="div" id="nested-list-subheader">
+                Upcoming coffeeBreaks
+              </ListSubHeader>
+            }
+            className={classes.root}
+          >
+            <div className={classes.spacer}></div>
+            {userMeetings.map(meeting => {
+              return (
+                <ListItem button onClick={() => gotoMeeting(meeting)} key={count++} className={classes.listItem}>
+                  <ListItemAvatar>
+                    <Avatar alt={getDisplayName(meeting)} src={getPhoto(meeting)}></Avatar>
+                  </ListItemAvatar>
+                  <ListItemText primary={getDisplayName(meeting)} secondary={meeting.startDateTime} />
+                </ListItem>
+              );
+            })}
+          </List>
         </div>
       )}
 

@@ -1,4 +1,5 @@
 import React from 'react';
 export default function VideoLogo() {
-  return <img width="75" src="../../../coffeeBreak.png"></img>;
+  const imgUrl = process.env.PUBLIC_URL + '/coffeeBreak.png';
+  return <img id="2" width="75" src={imgUrl}></img>;
 }

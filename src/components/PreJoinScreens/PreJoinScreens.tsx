@@ -104,9 +104,10 @@ export default function PreJoinScreens() {
     );
   } else {
     const status = window.sessionStorage.getItem('meetingStatus');
+    console.log('status: ', '|', status, '|');
 
     if (status === 'Complete') {
-      //window.sessionStorage.setItem("meetingStatus", "");
+      window.sessionStorage.setItem('meetingStatus', '');
       return <AnonUserPostMeetingPage />;
     }
 
