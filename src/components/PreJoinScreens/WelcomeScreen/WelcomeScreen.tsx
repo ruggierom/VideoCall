@@ -92,7 +92,7 @@ const useStyles = makeStyles((theme: Theme) => ({
 
 export default function WelcomeScreen() {
   const [userMeetings, setUserMeetings] = useState(Array<firestore.DocumentData>());
-  const [error, setError] = React.useState(true);
+  const [error, setError] = React.useState(false);
 
   useEffect(() => {
     if (isUserLoggedIn()) {
