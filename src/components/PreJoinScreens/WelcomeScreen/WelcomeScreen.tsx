@@ -13,13 +13,20 @@ import Avatar from '@material-ui/core/Avatar';
 import ImageIcon from '@material-ui/icons/Image';
 import WorkIcon from '@material-ui/icons/Work';
 import BeachAccessIcon from '@material-ui/icons/BeachAccess';
+import Alert from '@material-ui/lab/Alert';
+import IconButton from '@material-ui/core/IconButton';
+import Collapse from '@material-ui/core/Collapse';
+import CloseIcon from '@material-ui/icons/Close';
 
 const useStyles = makeStyles((theme: Theme) => ({
   root: {
     width: '100%',
-    backgroundColor: theme.palette.background.paper,
-    maxHeight: '100%',
-    overflow: 'auto',
+    '& > * + *': {
+      marginTop: theme.spacing(2),
+    },
+  },
+  spacer: {
+    margin: '100px',
   },
   gutterBottom: {
     marginBottom: '1em',
@@ -39,7 +46,6 @@ const useStyles = makeStyles((theme: Theme) => ({
     width: '100%',
   },
   spacer: {
-    marginTop: '8em',
     textAlign: 'center',
   },
   continueButton: {
@@ -54,6 +60,8 @@ const useStyles = makeStyles((theme: Theme) => ({
   },
   content: {
     margin: '1em',
+    justifyContent: 'center',
+    alignItems: 'center',
     textAlign: 'center',
   },
   listSubHeader: {
@@ -84,9 +92,12 @@ const useStyles = makeStyles((theme: Theme) => ({
 
 export default function WelcomeScreen() {
   const [userMeetings, setUserMeetings] = useState(Array<firestore.DocumentData>());
+  const [error, setError] = React.useState(true);
 
   useEffect(() => {
-    getUserMeetings();
+    if (isUserLoggedIn()) {
+      getUserMeetings();
+    }
   }, []);
 
   function getUserMeetings() {
@@ -99,24 +110,51 @@ export default function WelcomeScreen() {
       .get()
       .then(querySnapshot => {
         querySnapshot.forEach(doc => {
-          const temp2 = doc.data();
+          const d = new Date(doc.data()['startDateTime']);
+          if (d > new Date()) {
+            const temp2 = doc.data();
 
-          if (!temp2['guestPhoto']) {
-            temp2.guestPhoto = '';
-          } else {
-            console.log('ddd');
-            console.log(temp2.guestPhoto);
+            if (!temp2['guestPhoto']) {
+              temp2.guestPhoto = '';
+            } else {
+              console.log(temp2.guestPhoto);
+            }
+
+            if (temp2.status === 'Accepted') {
+              temp.push(temp2);
+            }
           }
-
-          temp.push(temp2);
         });
         setUserMeetings(temp);
       });
   }
 
-  useEffect(() => {
-    getUserMeetings();
-  }, []);
+  function getDisplayName(meeting: firestore.DocumentData) {
+    if (meeting.guestUid == firebase.auth().currentUser?.uid) {
+      return meeting.hostDisplayName;
+    } else {
+      return meeting.guestDisplayName;
+    }
+  }
+
+  function getPhoto(meeting: firestore.DocumentData) {
+    if (meeting.guestUid == firebase.auth().currentUser?.uid) {
+      return meeting.hostPhoto;
+    } else {
+      return meeting.guestPhoto;
+    }
+  }
+
+  function gotoMeeting(meeting: firestore.DocumentData) {
+    const min = meeting.startDateTimeAsDate + -(5 * 60 * 1000);
+    const max = meeting.startDateTimeAsDate + 20 * 60 * 1000;
+
+    if (Date() >= min && Date() <= max) {
+      window.open(meeting.guestMeetingUrl, '_self');
+    } else {
+      setError(true);
+    }
+  }
 
   function isUserLoggedIn() {
     var user = firebase.auth().currentUser;
@@ -146,27 +184,57 @@ export default function WelcomeScreen() {
   return (
     <>
       {isUserLoggedIn() && (
-        <IntroContainer>
-          <List
-            subheader={
-              <ListSubHeader className={classes.listSubHeader} component="div" id="nested-list-subheader">
-                My coffeeBreaks
-              </ListSubHeader>
-            }
-            className={classes.root}
-          >
-            {userMeetings.map(meeting => {
-              return (
-                <ListItem key={count++} className={classes.listItem}>
-                  <ListItemAvatar>
-                    <Avatar alt={meeting.guestDisplayName} src={meeting.guestPhoto}></Avatar>
-                  </ListItemAvatar>
-                  <ListItemText primary={meeting.guestDisplayName} secondary={meeting.startDateTime} />
-                </ListItem>
-              );
-            })}
-          </List>
-        </IntroContainer>
+        <div>
+          {userMeetings.length === 0 && (
+            <Typography variant="h6" className={classes.displayText}>
+              <div className={classes.content}>No coffeeBreaks scheduled.</div>
+              <div className={classes.content}>Create one in the app!</div>
+            </Typography>
+          )}
+
+          {error && (
+            <Alert
+              severity="info"
+              action={
+                <IconButton
+                  aria-label="close"
+                  color="inherit"
+                  size="small"
+                  onClick={() => {
+                    setError(false);
+                  }}
+                >
+                  <CloseIcon fontSize="inherit" />
+                </IconButton>
+              }
+            >
+              It's too early to join. Please come back within 5 minutes of meeting start time.
+            </Alert>
+          )}
+
+          {userMeetings.length > 0 && (
+            <List
+              subheader={
+                <ListSubHeader className={classes.listSubHeader} component="div" id="nested-list-subheader">
+                  Upcoming coffeeBreaks
+                </ListSubHeader>
+              }
+              className={classes.root}
+            >
+              <div className={classes.spacer}></div>
+              {userMeetings.map(meeting => {
+                return (
+                  <ListItem button onClick={() => gotoMeeting(meeting)} key={count++} className={classes.listItem}>
+                    <ListItemAvatar>
+                      <Avatar alt={getDisplayName(meeting)} src={getPhoto(meeting)}></Avatar>
+                    </ListItemAvatar>
+                    <ListItemText primary={getDisplayName(meeting)} secondary={meeting.startDateTime} />
+                  </ListItem>
+                );
+              })}
+            </List>
+          )}
+        </div>
       )}
 
       {!isUserLoggedIn() && (

@@ -2,12 +2,34 @@ import React from 'react';
 import { makeStyles, Theme, Typography } from '@material-ui/core';
 import Swoosh from './swoosh';
 import VideoLogo from './VideoLogo';
-import TwilioLogo from './TwilioLogo';
 import { useAppState } from '../../state';
 import UserMenu from './UserMenu/UserMenu';
 import { useLocation } from 'react-router-dom';
+import TwilioLogo from './TwilioLogo';
+
+import Breadcrumbs from '@material-ui/core/Breadcrumbs';
+import Link from '@material-ui/core/Link';
+import HomeIcon from '@material-ui/icons/Home';
+import WhatshotIcon from '@material-ui/icons/Whatshot';
+import GrainIcon from '@material-ui/icons/Grain';
 
 const useStyles = makeStyles((theme: Theme) => ({
+  copyright: {
+    display: 'flex',
+    color: 'white',
+    paddingBottom: '5px',
+  },
+  link: {
+    display: 'flex',
+    color: 'white',
+    paddingLeft: '30px',
+    paddingRight: '30px',
+  },
+  icon: {
+    marginRight: theme.spacing(0.5),
+    width: 15,
+    height: 20,
+  },
   background: {
     display: 'flex',
     alignItems: 'center',
@@ -16,14 +38,12 @@ const useStyles = makeStyles((theme: Theme) => ({
     height: '100%',
   },
   container: {
-    position: 'relative',
     flex: '1',
+    position: 'relative',
+    maxWidth: '900px',
   },
   innerContainer: {
     display: 'flex',
-    width: '888px',
-    height: '500px',
-
     borderRadius: '8px',
     boxShadow: '0px 2px 4px 0px rgba(40, 42, 43, 0.3)',
     overflow: 'hidden',
@@ -31,10 +51,9 @@ const useStyles = makeStyles((theme: Theme) => ({
     margin: 'auto',
     [theme.breakpoints.down('sm')]: {
       display: 'block',
-      height: 'auto',
       width: 'calc(100% - 40px)',
       margin: 'auto',
-      maxWidth: '400px',
+      maxWidth: '800px',
     },
   },
   swooshContainer: {
@@ -44,14 +63,13 @@ const useStyles = makeStyles((theme: Theme) => ({
     justifyContent: 'center',
     backgroundImage: Swoosh,
     backgroundSize: 'cover',
-    width: '206px',
+    width: '150px',
     [theme.breakpoints.down('sm')]: {
       width: '100%',
       height: '100px',
-      backgroundPositionY: '140px',
+      backgroundPositionY: '40px',
     },
   },
-
   logoContainer: {
     position: 'absolute',
     width: '210px',
@@ -67,11 +85,24 @@ const useStyles = makeStyles((theme: Theme) => ({
     },
   },
   twilioLogo: {
-    position: 'relative',
-    top: 0,
-    width: 200,
-    height: 200,
-    left: 0,
+    position: 'absolute',
+    top: 10,
+    left: 5,
+    width: '40px',
+  },
+  footer: {
+    position: 'fixed',
+    bottom: 10,
+    textAlign: 'center',
+    paddingBottom: 25,
+  },
+  footer2: {
+    position: 'fixed',
+    bottom: 0,
+    color: 'white',
+    fontSize: '10px',
+    textAlign: 'center',
+    paddingBottom: 5,
   },
   content: {
     background: 'white',
@@ -79,7 +110,7 @@ const useStyles = makeStyles((theme: Theme) => ({
     padding: '4em',
     flex: 1,
     [theme.breakpoints.down('sm')]: {
-      padding: '2em',
+      padding: '1em',
     },
   },
   title: {
@@ -92,19 +123,32 @@ const useStyles = makeStyles((theme: Theme) => ({
   },
 }));
 
+const handleChange = (event, newValue) => {
+  setValue(newValue);
+};
+
 interface IntroContainerProps {
   children: React.ReactNode;
 }
 
+function handleClick(event) {
+  event.preventDefault();
+  alert('You clicked a breadcrumb.');
+}
+
 const IntroContainer = (props: IntroContainerProps) => {
+  const [value, setValue] = React.useState('recents');
+
   const classes = useStyles();
   const { user } = useAppState();
   const location = useLocation();
 
   return (
     <div className={classes.background}>
-      <div className={classes.logoContainer}></div>
       {user && location.pathname !== '/login' && <UserMenu />}
+      <a href="/">
+        <img className={classes.twilioLogo} src={'../../../coffeeBreak.png'}></img>
+      </a>
       <div className={classes.container}>
         <div className={classes.innerContainer}>
           <div className={classes.swooshContainer}>
@@ -118,6 +162,18 @@ const IntroContainer = (props: IntroContainerProps) => {
           <div className={classes.content}>{props.children}</div>
         </div>
       </div>
+      <Breadcrumbs className={classes.footer} aria-label="breadcrumb">
+        <Link color="inherit" href="/" onClick={handleClick} className={classes.link}>
+          Privacy
+        </Link>
+        <Link href="/getting-started/installation/" onClick={handleClick} className={classes.link}>
+          Terms
+        </Link>
+        <Link href="/getting-started/installation/" onClick={handleClick} className={classes.link}>
+          About
+        </Link>
+      </Breadcrumbs>
+      <Typography className={classes.footer2}>© 2021 COFFEEBREAK VENTURES INC.</Typography>
     </div>
   );
 };

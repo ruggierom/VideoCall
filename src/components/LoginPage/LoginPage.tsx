@@ -34,8 +34,12 @@ const useStyles = makeStyles((theme: Theme) => ({
       marginRight: '0.4em',
     },
   },
+  spacer: {
+    margin: '100px',
+  },
   gutterBottom: {
     marginBottom: '1em',
+    textAlign: 'center',
   },
   passcodeContainer: {
     minHeight: '120px',
@@ -103,8 +107,10 @@ export default function LoginPage() {
       {process.env.REACT_APP_SET_AUTH === 'firebase' && (
         <>
           <Typography variant="h5" className={classes.gutterBottom}>
-            Sign in/create a coffeeBreak account
+            Sign in or create account
           </Typography>
+          <div className={classes.spacer}></div>
+          <div className={classes.spacer}></div>
           <div>
             <StyledFirebaseAuth uiConfig={uiConfig} firebaseAuth={firebase.auth()} />
           </div>

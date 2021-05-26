@@ -106,7 +106,7 @@ export default function AnonUserPostMeetingPage() {
             </a>
           </div>
         </Typography>
-        <Typography variant="h6" className={classes.displayText}>
+        <Typography variant="h6" className={classes.content}>
           <div className={classes.content}>
             Download the app to join coffeeBreak
             <div className={classes.imgDiv}>
