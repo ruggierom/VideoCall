@@ -5,7 +5,7 @@ import { AlertPage } from 'twilio/lib/rest/monitor/v1/alert';
 import firebase from 'firebase/app';
 import 'firebase/firestore';
 
-var hostUserName = 'Test';
+var otherUserName = 'Test';
 var userLookupAlias = '';
 
 const useStyles = makeStyles((theme: Theme) => ({
@@ -49,7 +49,7 @@ function onlyAlphabet(inputVal) {
   }
 }
 
-export default function AnonUserPostMeetingPage() {
+export default function UserPostMeetingPage() {
   const [userNameAvaialbe, setUserNameAvaialbe] = useState(true);
   const [helperText, sethelperText] = useState('');
   const [showButton, setShowButton] = useState(false);
@@ -70,6 +70,54 @@ export default function AnonUserPostMeetingPage() {
 
     checkIfUsernameAvailable(userLookupAlias);
   };
+
+  window.onbeforeunload = event => {
+    window.sessionStorage.setItem('meetingStatus', '');
+    window.sessionStorage.setItem('URLIdentity', '');
+    window.sessionStorage.setItem('URLMeetingId', '');
+    // Cancel the event
+    e.preventDefault();
+    if (e) {
+      e.returnValue = ''; // Legacy method for cross browser support
+    }
+    return ''; // Legacy method for cross browser support
+  };
+
+  function getMeetingInfo() {
+    const db = firebase.firestore();
+    const docRef = db.collection('meetings').doc(firebase.auth().currentUser?.uid);
+
+    console.log('About to call DB');
+    docRef
+      .collection('meetings')
+      .get()
+      .then(querySnapshot => {
+        setReadyToShow(true);
+        querySnapshot.forEach(doc => {
+          const d = doc.data()['startDateTimeAsDate'];
+
+          const min = d.toMillis() - 5 * 60 * 1000;
+          const max = d.toMillis() + 15 * 60 * 1000;
+          const nowInMil = Date.now();
+
+          if (nowInMil >= min && nowInMil <= max) {
+            const temp2 = doc.data();
+            console.log(temp2);
+
+            if (!temp2['guestPhoto']) {
+              temp2.guestPhoto = '';
+            } else {
+              console.log(temp2.guestPhoto);
+            }
+
+            //if (temp2.status === 'Accepted') {
+            temp.push(temp2);
+          }
+          //}
+        });
+        setUserMeetings(temp);
+      });
+  }
 
   function checkIfUsernameAvailable(usernameToCheck: string) {
     try {
@@ -94,14 +142,14 @@ export default function AnonUserPostMeetingPage() {
     }
   }
 
-  function renderForm() {
+  function renderAnonForm() {
     console.log('userNameAvaialbe: ', userNameAvaialbe);
 
     return (
       <IntroContainer>
         <Typography variant="h5" className={classes.content}>
           <div className={classes.imgDiv}>
-            Congratulations on your 1st coffeeBreak with {hostUserName}.{' '}
+            Congratulations on your 1st coffeeBreak with {otherUserName}.{' '}
             <a className={classes.anchor} href="https://joincoffeebreak.com">
               (@testuser)
             </a>
@@ -151,5 +199,27 @@ export default function AnonUserPostMeetingPage() {
       </IntroContainer>
     );
   }
-  return renderForm();
+
+  function renderUserForm() {
+    console.log('userNameAvaialbe: ', userNameAvaialbe);
+
+    return (
+      <IntroContainer>
+        <Typography variant="h5" className={classes.content}>
+          <div className={classes.imgDiv}>
+            Congratulations on another coffeeBreak with {otherUserName}.{' '}
+            <a className={classes.anchor} href="https://joincoffeebreak.com">
+              (@testuser)
+            </a>
+          </div>
+        </Typography>
+      </IntroContainer>
+    );
+  }
+
+  if (firebase.auth().currentUser) {
+    return renderUserForm();
+  } else {
+    return renderAnonForm();
+  }
 }

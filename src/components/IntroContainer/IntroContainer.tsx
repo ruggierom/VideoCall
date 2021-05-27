@@ -13,6 +13,7 @@ import HomeIcon from '@material-ui/icons/Home';
 import WhatshotIcon from '@material-ui/icons/Whatshot';
 import GrainIcon from '@material-ui/icons/Grain';
 
+/*
 const useStyles = makeStyles((theme: Theme) => ({
   copyright: {
     display: 'flex',
@@ -123,6 +124,110 @@ const useStyles = makeStyles((theme: Theme) => ({
     },
   },
 }));
+*/
+
+const useStyles = makeStyles((theme: Theme) => ({
+  link: {
+    display: 'flex',
+    color: 'white',
+    paddingLeft: '30px',
+    paddingRight: '30px',
+  },
+
+  background: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'rgb(40, 42, 43)',
+    height: '100%',
+  },
+  container: {
+    position: 'relative',
+    flex: '1',
+  },
+  innerContainer: {
+    display: 'flex',
+    width: '888px',
+    height: '379px',
+    borderRadius: '8px',
+    boxShadow: '0px 2px 4px 0px rgba(40, 42, 43, 0.3)',
+    overflow: 'hidden',
+    position: 'relative',
+    margin: 'auto',
+    [theme.breakpoints.down('sm')]: {
+      display: 'block',
+      height: 'auto',
+      width: 'calc(100% - 40px)',
+      margin: 'auto',
+      maxWidth: '400px',
+    },
+  },
+  swooshContainer: {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundImage: Swoosh,
+    backgroundSize: 'cover',
+    width: '296px',
+    [theme.breakpoints.down('sm')]: {
+      width: '100%',
+      height: '100px',
+      backgroundPositionY: '140px',
+    },
+  },
+  logoContainer: {
+    position: 'absolute',
+    width: '210px',
+    textAlign: 'center',
+    [theme.breakpoints.down('sm')]: {
+      display: 'flex',
+      alignItems: 'center',
+      width: '90%',
+      textAlign: 'initial',
+      '& svg': {
+        height: '64px',
+      },
+    },
+  },
+  twilioLogo: {
+    position: 'absolute',
+    top: 10,
+    left: 5,
+    width: '40px',
+  },
+  footer: {
+    position: 'fixed',
+    bottom: 10,
+    textAlign: 'center',
+    paddingBottom: 25,
+  },
+  footer2: {
+    position: 'fixed',
+    bottom: 0,
+    color: 'white',
+    fontSize: '10px',
+    textAlign: 'center',
+    paddingBottom: 5,
+  },
+  content: {
+    background: 'white',
+    width: '100%',
+    padding: '4em',
+    flex: 1,
+    [theme.breakpoints.down('sm')]: {
+      padding: '2em',
+    },
+  },
+  title: {
+    color: 'white',
+    margin: '1em 0 0',
+    [theme.breakpoints.down('sm')]: {
+      margin: 0,
+      fontSize: '1.1rem',
+    },
+  },
+}));
 
 const handleChange = (event, newValue) => {
   setValue(newValue);
@@ -143,7 +248,7 @@ const IntroContainer = (props: IntroContainerProps) => {
   return (
     <div className={classes.background}>
       {user && location.pathname !== '/login' && <UserMenu />}
-      <a href="/">
+      <a href="/welcome">
         <img id="1" className={classes.twilioLogo} src={imgUrl}></img>
       </a>
       <div className={classes.container}>

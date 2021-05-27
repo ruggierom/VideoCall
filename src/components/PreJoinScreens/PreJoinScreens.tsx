@@ -10,9 +10,12 @@ import useVideoContext from '../../hooks/useVideoContext/useVideoContext';
 import Video from 'twilio-video';
 import InvitePage from '../InvitePage/InvitePage';
 import { AlertPage } from 'twilio/lib/rest/monitor/v1/alert';
-import AnonUserPostMeetingPage from '../PostMeeting/PostMeeting';
+import UserPostMeetingPage from '../PostMeeting/PostMeeting';
+import { Typography, makeStyles, TextField, Grid, Button, InputLabel, Theme } from '@material-ui/core';
 import firebase, { firestore } from 'firebase/app';
 import 'firebase/firestore';
+import RoomNameScreen from './RoomNameScreen/RoomNameScreen';
+import { PermIdentity } from '@material-ui/icons';
 
 export enum Steps {
   roomNameStep,
@@ -25,17 +28,31 @@ export default function PreJoinScreens() {
   const { user } = useAppState();
   const { getAudioAndVideoTracks } = useVideoContext();
 
-  const { URLIdentity } = useParams();
-  const { URLMeetingId } = useParams();
+  var { URLIdentity } = useParams();
+  var { URLMeetingId } = useParams();
   const [step, setStep] = useState(Steps.roomNameStep);
+  const [test, setTest] = useState(true);
   const [name, setName] = useState<string>(user?.displayName || '');
   const [userName, setUserName] = useState<string>('');
   const [userEmail, setUserEmail] = useState<string>('');
   const [roomName, setRoomName] = useState<string>('');
-
   const [mediaError, setMediaError] = useState<Error>();
 
   useEffect(() => {
+    if (!user) {
+      if (!URLIdentity) {
+        URLIdentity = window.sessionStorage.getItem('URLIdentity');
+      } else {
+        window.sessionStorage.setItem('URLIdentity', URLIdentity);
+      }
+
+      if (!URLMeetingId) {
+        URLMeetingId = window.sessionStorage.getItem('URLMeetingId');
+      } else {
+        window.sessionStorage.setItem('URLMeetingId', URLMeetingId);
+      }
+    }
+
     if (URLIdentity) {
       var meetingDisplayName = '';
       var names: string[];
@@ -66,11 +83,12 @@ export default function PreJoinScreens() {
         setStep(Steps.deviceSelectionStep);
         gotoMeeting();
       } else {
-        if (window.location.pathname.indexOf('/invite') > -1) {
-          setStep(Steps.sendInviteStep);
-        } else {
-          setStep(Steps.deviceSelectionStep);
-        }
+        //if (window.location.pathname.indexOf('/invite') > -1) {
+        setStep(Steps.sendInviteStep);
+        gotoMeeting();
+        //} else {
+        //  setStep(Steps.deviceSelectionStep);
+        // }
       }
     }
   }, [user, URLMeetingId, URLIdentity]);
@@ -89,7 +107,8 @@ export default function PreJoinScreens() {
     if (step !== Steps.sendInviteStep) {
       // If this app is deployed as a twilio function, don't change the URL because routing isn't supported.
       if (!window.location.origin.includes('twil.io')) {
-        window.history.replaceState(null, '', window.encodeURI(`/room/${roomName}${window.location.search || ''}`));
+        console.log(window.encodeURI(`/meetingId/${roomName}/identity/${userName}`));
+        window.history.replaceState(null, '', window.encodeURI(`/meetingId/${roomName}/identity/${userName}`));
       }
       setStep(Steps.deviceSelectionStep);
     }
@@ -119,8 +138,15 @@ export default function PreJoinScreens() {
     console.log('status: ', '|', status, '|');
 
     if (status === 'Complete') {
-      window.sessionStorage.setItem('meetingStatus', '');
-      return <AnonUserPostMeetingPage />;
+      return (
+        <UserPostMeetingPage
+          userName={userName}
+          roomName={roomName}
+          setName={setName}
+          setRoomName={setRoomName}
+          handleSubmit={handleSubmit}
+        />
+      );
     }
 
     return (
@@ -128,7 +154,7 @@ export default function PreJoinScreens() {
         <MediaErrorSnackbar error={mediaError} />
         {step === Steps.roomNameStep && (
           <WelcomeScreen
-            name={name}
+            userName={userName}
             roomName={roomName}
             setName={setName}
             setRoomName={setRoomName}

@@ -75,6 +75,12 @@ ReactDOM.render(
   document.getElementById('root')
 );
 
+if (document.body.style.overflow !== 'hidden') {
+  document.body.style.overflow = 'hidden';
+} else {
+  document.body.style.overflow = 'scroll';
+}
+
 function Privacy() {
   return <h2>Privacy</h2>;
 }

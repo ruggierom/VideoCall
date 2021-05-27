@@ -14,6 +14,7 @@ import Alert from '@material-ui/lab/Alert';
 import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
 import { app } from 'firebase-admin';
+import { useLocation, useHistory } from 'react-router-dom';
 
 const useStyles = makeStyles((theme: Theme) => ({
   root: {
@@ -121,7 +122,11 @@ export default function WelcomeScreen() {
         querySnapshot.forEach(doc => {
           const d = doc.data()['startDateTimeAsDate'];
 
-          if (d.toMillis() >= Date.now() - 30000) {
+          const min = d.toMillis() - 5 * 60 * 1000;
+          const max = d.toMillis() + 15 * 60 * 1000;
+          const nowInMil = Date.now();
+
+          if (nowInMil >= min && nowInMil <= max) {
             const temp2 = doc.data();
             console.log(temp2);
 
@@ -133,8 +138,8 @@ export default function WelcomeScreen() {
 
             //if (temp2.status === 'Accepted') {
             temp.push(temp2);
-            //}
           }
+          //}
         });
         setUserMeetings(temp);
       });
@@ -146,7 +151,13 @@ export default function WelcomeScreen() {
     const nowInMil = Date.now();
 
     if (nowInMil >= min && nowInMil <= max) {
-      window.open(meeting.guestMeetingUrl, '_self');
+      if (firebase.auth().currentUser?.uid) {
+        if (meeting.guestUid == firebase.auth().currentUser?.uid) {
+          window.open(meeting.guestMeetingUrl, '_self');
+        } else {
+          window.open(meeting.hostMeetingUrl, '_self');
+        }
+      }
     } else {
       setError(true);
     }
@@ -178,6 +189,7 @@ export default function WelcomeScreen() {
 
   const classes = useStyles();
   const { user } = useAppState();
+  const history = useHistory();
 
   const hasUsername = !window.location.search.includes('customIdentity=true') && user?.displayName;
   const items = [];
@@ -187,34 +199,36 @@ export default function WelcomeScreen() {
     <>
       {firebaseUser && userMeetings.length > 0 && readyToShow && (
         <IntroContainer>
-          {error && (
-            <Alert
-              severity="info"
-              action={
-                <IconButton
-                  aria-label="close"
-                  color="inherit"
-                  size="small"
-                  onClick={() => {
-                    setError(false);
-                  }}
-                >
-                  <CloseIcon fontSize="inherit" />
-                </IconButton>
-              }
-            >
-              It's too early to join. Please come back within 5 minutes of meeting start time.
-            </Alert>
-          )}
+          <div>
+            {' '}
+            {error && (
+              <Alert
+                severity="info"
+                action={
+                  <IconButton
+                    aria-label="close"
+                    color="inherit"
+                    size="small"
+                    onClick={() => {
+                      setError(false);
+                    }}
+                  >
+                    <CloseIcon fontSize="inherit" />
+                  </IconButton>
+                }
+              >
+                It's too early to join. Please come back within 5 minutes of meeting start time.
+              </Alert>
+            )}
+          </div>
           <List
             subheader={
-              <ListSubHeader className={classes.listSubHeader} component="div" id="nested-list-subheader">
+              <ListSubHeader className={classes.listSubHeader} component="span" id="nested-list-subheader">
                 Upcoming coffeeBreaks
               </ListSubHeader>
             }
             className={classes.root}
           >
-            <div className={classes.spacer}></div>
             {userMeetings.map(meeting => {
               return (
                 <ListItem button onClick={() => gotoMeeting(meeting)} key={count++} className={classes.listItem}>
@@ -230,21 +244,16 @@ export default function WelcomeScreen() {
       )}
 
       {firebaseUser && userMeetings.length === 0 && readyToShow && (
-        <IntroContainer>
-          <Typography variant="h5" className={classes.displayText}>
-            <div className={classes.content}>No coffeeBreaks scheduled.</div>
-            <div className={classes.content}>Go to the app to schedule one</div>
-          </Typography>
-        </IntroContainer>
+        <Typography variant="h5" className={classes.displayText}>
+          <div className={classes.content}>No coffeeBreaks scheduled.</div>
+          <div className={classes.content}>Go to the app to schedule one</div>
+        </Typography>
       )}
 
       {!firebaseUser && userMeetings.length === 0 && (
-        <IntroContainer>
+        <div>
           <Typography variant="h5" className={classes.displayText}>
-            <div className={classes.content}>
-              Welcome to coffeeBreak
-              <div>More stuff here...</div>
-            </div>
+            <div className={classes.content}>Welcome to coffeeBreak</div>
             <div className={classes.content}></div>
           </Typography>
 
@@ -264,7 +273,7 @@ export default function WelcomeScreen() {
                 type="submit"
                 color="primary"
                 onClick={() => {
-                  window.open('/login', '_self');
+                  history.replace('/login');
                 }}
                 className={classes.continueButton}
               >
@@ -272,7 +281,7 @@ export default function WelcomeScreen() {
               </Button>
             </div>
           </Typography>
-        </IntroContainer>
+        </div>
       )}
     </>
   );

@@ -70,6 +70,7 @@ export default function DeviceSelectionScreen({ userName, roomName, setStep }: D
   const handleJoin = () => {
     console.log(userName);
     getToken(userName, roomName).then(token => {
+      console.log('token: ', token);
       videoConnect(token);
       process.env.REACT_APP_DISABLE_TWILIO_CONVERSATIONS !== 'true' && chatConnect(token);
     });

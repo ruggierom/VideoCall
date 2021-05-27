@@ -10,6 +10,7 @@ import Room from './components/Room/Room';
 
 import useHeight from './hooks/useHeight/useHeight';
 import useRoomState from './hooks/useRoomState/useRoomState';
+import WelcomeScreen from './components/PreJoinScreens/WelcomeScreen/WelcomeScreen';
 
 const Container = styled('div')({
   display: 'grid',
