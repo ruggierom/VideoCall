@@ -32,6 +32,7 @@ const useStyles = makeStyles((theme: Theme) => ({
   },
   background: {
     display: 'flex',
+    touchAction: 'none',
     alignItems: 'center',
     justifyContent: 'center',
     background: 'rgb(40, 42, 43)',
@@ -131,11 +132,6 @@ interface IntroContainerProps {
   children: React.ReactNode;
 }
 
-function handleClick(event) {
-  event.preventDefault();
-  alert('You clicked a breadcrumb.');
-}
-
 const IntroContainer = (props: IntroContainerProps) => {
   const [value, setValue] = React.useState('recents');
 
@@ -164,13 +160,13 @@ const IntroContainer = (props: IntroContainerProps) => {
         </div>
       </div>
       <Breadcrumbs className={classes.footer} aria-label="breadcrumb">
-        <Link color="inherit" href="/" onClick={handleClick} className={classes.link}>
+        <Link color="inherit" href="/privacy" className={classes.link}>
           Privacy
         </Link>
-        <Link href="/getting-started/installation/" onClick={handleClick} className={classes.link}>
+        <Link href="/terms" className={classes.link}>
           Terms
         </Link>
-        <Link href="/getting-started/installation/" onClick={handleClick} className={classes.link}>
+        <Link href="/about" className={classes.link}>
           About
         </Link>
       </Breadcrumbs>

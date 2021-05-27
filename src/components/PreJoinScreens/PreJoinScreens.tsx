@@ -11,6 +11,8 @@ import Video from 'twilio-video';
 import InvitePage from '../InvitePage/InvitePage';
 import { AlertPage } from 'twilio/lib/rest/monitor/v1/alert';
 import AnonUserPostMeetingPage from '../PostMeeting/PostMeeting';
+import firebase, { firestore } from 'firebase/app';
+import 'firebase/firestore';
 
 export enum Steps {
   roomNameStep,
@@ -54,15 +56,21 @@ export default function PreJoinScreens() {
           meetingDisplayName = URLIdentity;
         }
       }
+
       setUserName(meetingDisplayName);
       if (URLMeetingId) {
         setRoomName(URLMeetingId);
       }
 
-      if (window.location.pathname.indexOf('/invite') > -1) {
-        setStep(Steps.sendInviteStep);
-      } else {
+      if (user != null) {
         setStep(Steps.deviceSelectionStep);
+        gotoMeeting();
+      } else {
+        if (window.location.pathname.indexOf('/invite') > -1) {
+          setStep(Steps.sendInviteStep);
+        } else {
+          setStep(Steps.deviceSelectionStep);
+        }
       }
     }
   }, [user, URLMeetingId, URLIdentity]);
@@ -77,8 +85,7 @@ export default function PreJoinScreens() {
     }
   }, [getAudioAndVideoTracks, step, mediaError]);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  function gotoMeeting() {
     if (step !== Steps.sendInviteStep) {
       // If this app is deployed as a twilio function, don't change the URL because routing isn't supported.
       if (!window.location.origin.includes('twil.io')) {
@@ -86,6 +93,11 @@ export default function PreJoinScreens() {
       }
       setStep(Steps.deviceSelectionStep);
     }
+  }
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    gotoMeeting();
   };
 
   if (step === Steps.sendInviteStep) {

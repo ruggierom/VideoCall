@@ -40,9 +40,21 @@ ReactDOM.render(
       <Router>
         <AppStateProvider>
           <Switch>
-            <PrivateRoute exact path="/">
+            <Route path="/privacy">
+              <Privacy />
+            </Route>
+            <Route path="/terms">
+              <Terms />
+            </Route>
+            <Route path="/about">
+              <About />
+            </Route>
+            <Route path="/welcome">
+              <WelcomeScreen name="" roomName="" setName={() => {}} setRoomName={() => {}} handleSubmit={() => {}} />
+            </Route>
+            <Route exact path="/">
               <VideoApp />
-            </PrivateRoute>
+            </Route>
             <Route path="/meetingId/:URLMeetingId/identity/:URLIdentity">
               <VideoApp />
             </Route>
@@ -62,3 +74,15 @@ ReactDOM.render(
   </MuiThemeProvider>,
   document.getElementById('root')
 );
+
+function Privacy() {
+  return <h2>Privacy</h2>;
+}
+
+function Terms() {
+  return <h2>Terms</h2>;
+}
+
+function About() {
+  return <h2>About</h2>;
+}

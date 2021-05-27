@@ -10,14 +10,10 @@ import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import ListItemAvatar from '@material-ui/core/ListItemAvatar';
 import Avatar from '@material-ui/core/Avatar';
-import ImageIcon from '@material-ui/icons/Image';
-import WorkIcon from '@material-ui/icons/Work';
-import BeachAccessIcon from '@material-ui/icons/BeachAccess';
 import Alert from '@material-ui/lab/Alert';
 import IconButton from '@material-ui/core/IconButton';
-import Collapse from '@material-ui/core/Collapse';
 import CloseIcon from '@material-ui/icons/Close';
-import { useWindowScroll } from 'react-use';
+import { app } from 'firebase-admin';
 
 const useStyles = makeStyles((theme: Theme) => ({
   root: {
@@ -98,38 +94,34 @@ const useStyles = makeStyles((theme: Theme) => ({
 export default function WelcomeScreen() {
   const [userMeetings, setUserMeetings] = useState(Array<firestore.DocumentData>());
   const [error, setError] = React.useState(false);
+  const [readyToShow, setReadyToShow] = React.useState(false);
+  const { firebaseUser } = useAppState();
 
-  useEffect(() => {
-    if (isUserLoggedIn()) {
-      getUserMeetings();
-    }
-  }, []);
-
-  function gotoMeeting(meeting: firestore.DocumentData) {
-    const min = meeting.startDateTimeAsDate.toMillis() - 5 * 60 * 1000;
-    const max = meeting.startDateTimeAsDate.toMillis() + 40 * 60 * 1000;
-    const nowInMil = Date.now();
-
-    if (nowInMil >= min && nowInMil <= max) {
-      window.open(meeting.guestMeetingUrl, '_self');
-    } else {
-      setError(true);
-    }
+  if (firebaseUser && firebase.auth().currentUser?.uid) {
+    getUserMeetings();
+  } else {
+    console.log('here');
   }
 
   function getUserMeetings() {
+    if (userMeetings.length > 0) {
+      return;
+    }
+
     var temp = Array<firestore.DocumentData>();
     const db = firebase.firestore();
     const docRef = db.collection('userMeetings').doc(firebase.auth().currentUser?.uid);
 
+    console.log('About to call DB');
     docRef
       .collection('meetings')
       .get()
       .then(querySnapshot => {
+        setReadyToShow(true);
         querySnapshot.forEach(doc => {
           const d = doc.data()['startDateTimeAsDate'];
 
-          if (d.toMillis() > Date.now()) {
+          if (d.toMillis() >= Date.now() - 30000) {
             const temp2 = doc.data();
             console.log(temp2);
 
@@ -148,29 +140,39 @@ export default function WelcomeScreen() {
       });
   }
 
-  function getDisplayName(meeting: firestore.DocumentData) {
-    if (meeting.guestUid == firebase.auth().currentUser?.uid) {
-      return meeting.hostDisplayName;
+  function gotoMeeting(meeting: firestore.DocumentData) {
+    const min = meeting.startDateTimeAsDate.toMillis() - 5 * 60 * 1000;
+    const max = meeting.startDateTimeAsDate.toMillis() + 15 * 60 * 1000;
+    const nowInMil = Date.now();
+
+    if (nowInMil >= min && nowInMil <= max) {
+      window.open(meeting.guestMeetingUrl, '_self');
     } else {
-      return meeting.guestDisplayName;
+      setError(true);
+    }
+  }
+
+  function getDisplayName(meeting: firestore.DocumentData) {
+    if (firebase.auth().currentUser?.uid) {
+      if (meeting.guestUid == firebase.auth().currentUser?.uid) {
+        return meeting.hostDisplayName;
+      } else {
+        return meeting.guestDisplayName;
+      }
+    } else {
+      return meeting.hostDisplayName;
     }
   }
 
   function getPhoto(meeting: firestore.DocumentData) {
-    if (meeting.guestUid == firebase.auth().currentUser?.uid) {
+    if (firebase.auth().currentUser?.uid) {
+      if (meeting.guestUid == firebase.auth().currentUser?.uid) {
+        return meeting.hostPhoto;
+      } else {
+        return meeting.guestPhoto;
+      }
+    } else {
       return meeting.hostPhoto;
-    } else {
-      return meeting.guestPhoto;
-    }
-  }
-
-  function isUserLoggedIn() {
-    var user = firebase.auth().currentUser;
-
-    if (user != null) {
-      return true;
-    } else {
-      return false;
     }
   }
 
@@ -183,37 +185,27 @@ export default function WelcomeScreen() {
 
   return (
     <>
-      {error && (
-        <Alert
-          severity="info"
-          action={
-            <IconButton
-              aria-label="close"
-              color="inherit"
-              size="small"
-              onClick={() => {
-                setError(false);
-              }}
+      {firebaseUser && userMeetings.length > 0 && readyToShow && (
+        <IntroContainer>
+          {error && (
+            <Alert
+              severity="info"
+              action={
+                <IconButton
+                  aria-label="close"
+                  color="inherit"
+                  size="small"
+                  onClick={() => {
+                    setError(false);
+                  }}
+                >
+                  <CloseIcon fontSize="inherit" />
+                </IconButton>
+              }
             >
-              <CloseIcon fontSize="inherit" />
-            </IconButton>
-          }
-        >
-          It's too early to join. Please come back within 5 minutes of meeting start time.
-        </Alert>
-      )}
-
-      {isUserLoggedIn() && userMeetings.length === 0 && (
-        <div>
-          <Typography variant="h5" className={classes.displayText}>
-            <div className={classes.content}>No coffeeBreaks scheduled.</div>
-            <div className={classes.content}>Go to the app to schedule one</div>
-          </Typography>
-        </div>
-      )}
-
-      {userMeetings.length > 0 && (
-        <div>
+              It's too early to join. Please come back within 5 minutes of meeting start time.
+            </Alert>
+          )}
           <List
             subheader={
               <ListSubHeader className={classes.listSubHeader} component="div" id="nested-list-subheader">
@@ -234,10 +226,19 @@ export default function WelcomeScreen() {
               );
             })}
           </List>
-        </div>
+        </IntroContainer>
       )}
 
-      {!isUserLoggedIn() && (
+      {firebaseUser && userMeetings.length === 0 && readyToShow && (
+        <IntroContainer>
+          <Typography variant="h5" className={classes.displayText}>
+            <div className={classes.content}>No coffeeBreaks scheduled.</div>
+            <div className={classes.content}>Go to the app to schedule one</div>
+          </Typography>
+        </IntroContainer>
+      )}
+
+      {!firebaseUser && userMeetings.length === 0 && (
         <IntroContainer>
           <Typography variant="h5" className={classes.displayText}>
             <div className={classes.content}>

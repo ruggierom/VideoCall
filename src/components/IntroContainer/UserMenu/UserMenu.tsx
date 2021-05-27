@@ -5,6 +5,8 @@ import { useAppState } from '../../../state';
 import UserAvatar from './UserAvatar/UserAvatar';
 import Menu from '@material-ui/core/Menu';
 import useVideoContext from '../../../hooks/useVideoContext/useVideoContext';
+import { useLocation, useHistory } from 'react-router-dom';
+import LoginPage from '../../LoginPage/LoginPage';
 
 const useStyles = makeStyles({
   userContainer: {
@@ -28,15 +30,18 @@ const useStyles = makeStyles({
 const UserMenu: React.FC = () => {
   const classes = useStyles();
   const { user, signOut } = useAppState();
-  const { localTracks } = useVideoContext();
+  //const { localTracks } = useVideoContext();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const anchorRef = useRef<HTMLButtonElement>(null);
+  const history = useHistory();
 
   const handleSignOut = useCallback(() => {
-    localTracks.forEach(track => track.stop());
+    //localTracks.forEach(track => track.stop());
     signOut?.();
-  }, [localTracks, signOut]);
+
+    //}, [localTracks, signOut]);
+  }, [signOut]);
 
   if (process.env.REACT_APP_SET_AUTH === 'passcode') {
     return (

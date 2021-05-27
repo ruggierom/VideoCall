@@ -6,6 +6,9 @@ import useActiveSinkId from './useActiveSinkId/useActiveSinkId';
 import useFirebaseAuth from './useFirebaseAuth/useFirebaseAuth';
 import usePasscodeAuth from './usePasscodeAuth/usePasscodeAuth';
 import { User } from 'firebase';
+import firebase, { firestore } from 'firebase/app';
+import LoginPage from '../components/LoginPage/LoginPage';
+import { useLocation, useHistory } from 'react-router-dom';
 
 export interface StateContextType {
   error: TwilioError | Error | null;
@@ -16,6 +19,7 @@ export interface StateContextType {
   signOut?(): Promise<void>;
   isAuthReady?: boolean;
   isFetching: boolean;
+  firebaseUser: firebase.User;
   activeSinkId: string;
   setActiveSinkId(sinkId: string): void;
   settings: Settings;
@@ -23,9 +27,6 @@ export interface StateContextType {
   roomType?: RoomType;
   updateRecordingRules(room_sid: string, rules: RecordingRules): Promise<object>;
 }
-
-var firebase = require('firebase');
-var firebaseui = require('firebaseui');
 
 export const StateContext = createContext<StateContextType>(null!);
 
@@ -41,9 +42,12 @@ export const StateContext = createContext<StateContextType>(null!);
 export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
   const [error, setError] = useState<TwilioError | null>(null);
   const [isFetching, setIsFetching] = useState(false);
+  const [userLoggedOut, setUserLoggedOut] = useState(false);
   const [activeSinkId, setActiveSinkId] = useActiveSinkId();
   const [settings, dispatchSetting] = useReducer(settingsReducer, initialSettings);
   const [roomType, setRoomType] = useState<RoomType>();
+  const [firebaseUser, setfirebaseUser] = useState<firebase.User>();
+  const history = useHistory();
 
   let contextValue = {
     error,
@@ -54,6 +58,7 @@ export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
     settings,
     dispatchSetting,
     roomType,
+    firebaseUser,
   } as StateContextType;
 
   if (process.env.REACT_APP_SET_AUTH === 'firebase') {
@@ -69,15 +74,24 @@ export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
 
     if (firebase.apps.length === 0) {
       firebase.initializeApp(firebaseConfig);
+
+      firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+          setfirebaseUser(user);
+          console.log('user: ', user);
+        } else {
+          console.log('user logged out');
+          setUserLoggedOut(true);
+          history.replace('/');
+        }
+      });
     }
 
-    console.log('HERE 1');
     contextValue = {
       ...contextValue,
       ...useFirebaseAuth(), // eslint-disable-line react-hooks/rules-of-hooks
     };
   } else {
-    console.log('HERE 2');
     contextValue = {
       ...contextValue,
       getToken: async (user_identity, room_name) => {

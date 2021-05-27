@@ -9,6 +9,7 @@ import ToggleVideoButton from '../../Buttons/ToggleVideoButton/ToggleVideoButton
 import { useAppState } from '../../../state';
 import useChatContext from '../../../hooks/useChatContext/useChatContext';
 import useVideoContext from '../../../hooks/useVideoContext/useVideoContext';
+import { useHistory } from 'react-router-dom';
 
 const useStyles = makeStyles((theme: Theme) => ({
   gutterBottom: {
@@ -64,6 +65,7 @@ export default function DeviceSelectionScreen({ userName, roomName, setStep }: D
   const { connect: chatConnect } = useChatContext();
   const { connect: videoConnect, isAcquiringLocalTracks, isConnecting } = useVideoContext();
   const disableButtons = isFetching || isAcquiringLocalTracks || isConnecting;
+  let history = useHistory();
 
   const handleJoin = () => {
     console.log(userName);
@@ -116,7 +118,7 @@ export default function DeviceSelectionScreen({ userName, roomName, setStep }: D
               </Hidden>
             </div>
             <div className={classes.joinButtons}>
-              <Button variant="outlined" color="primary" onClick={() => setStep(Steps.roomNameStep)}>
+              <Button variant="outlined" color="primary" onClick={() => history.replace('/welcome')}>
                 Cancel
               </Button>
               <Button
