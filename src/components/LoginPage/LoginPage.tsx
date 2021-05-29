@@ -11,7 +11,7 @@ import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 
 import { makeStyles } from '@material-ui/core/styles';
-import { useLocation, useHistory } from 'react-router-dom';
+import { useLocation, useHistory, Redirect } from 'react-router-dom';
 import firebase from 'firebase';
 import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
 import { Url } from 'node:url';
@@ -62,7 +62,7 @@ export default function LoginPage() {
   const isAuthEnabled = Boolean(process.env.REACT_APP_SET_AUTH);
 
   if (user || !isAuthEnabled) {
-    history.replace('/');
+    return <Redirect to="/welcome"></Redirect>;
   }
 
   if (!isAuthReady) {

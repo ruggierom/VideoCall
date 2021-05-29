@@ -82,7 +82,7 @@ export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
         } else {
           console.log('user logged out');
           setUserLoggedOut(true);
-          history.replace('/');
+          //history.replace('/');
         }
       });
     }

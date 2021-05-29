@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 
-export default function About() {
+export default function About(className = '') {
   const Wrapper = styled.div`
     min-height: calc(100vh - 50px);
     background-color: #f76565;

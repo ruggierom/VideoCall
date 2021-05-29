@@ -18,6 +18,9 @@ import useConnectionOptions from './utils/useConnectionOptions/useConnectionOpti
 import UnsupportedBrowserWarning from './components/UnsupportedBrowserWarning/UnsupportedBrowserWarning';
 import InvitePage from './components/InvitePage/InvitePage';
 import WelcomeScreen from './components/PreJoinScreens/WelcomeScreen/WelcomeScreen';
+import Privacy from './components/Privacy/PrivacyScreen';
+import Terms from './components/Terms/TermsScreen';
+import About from './components/About/AboutScreen';
 
 const VideoApp = () => {
   const { error, setError } = useAppState();
@@ -50,7 +53,7 @@ ReactDOM.render(
               <About />
             </Route>
             <Route path="/welcome">
-              <WelcomeScreen name="" roomName="" setName={() => {}} setRoomName={() => {}} handleSubmit={() => {}} />
+              <WelcomeScreen />
             </Route>
             <Route exact path="/">
               <VideoApp />
@@ -79,16 +82,4 @@ if (document.body.style.overflow !== 'hidden') {
   document.body.style.overflow = 'hidden';
 } else {
   document.body.style.overflow = 'scroll';
-}
-
-function Privacy() {
-  return <h2>Privacy</h2>;
-}
-
-function Terms() {
-  return <h2>Terms</h2>;
-}
-
-function About() {
-  return <h2>About</h2>;
 }

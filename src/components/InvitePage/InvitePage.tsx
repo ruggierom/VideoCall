@@ -1,6 +1,8 @@
-import React, { ChangeEvent, useEffect } from 'react';
+import React, { useState, useEffect, ChangeEvent } from 'react';
 import { useAppState } from '../../state';
 import { Typography, makeStyles, TextField, Grid, Button, InputLabel, Theme } from '@material-ui/core';
+import IntroContainer from '../IntroContainer/IntroContainer';
+import { useParams } from 'react-router-dom';
 
 const useStyles = makeStyles((theme: Theme) => ({
   gutterBottom: {
@@ -27,31 +29,64 @@ const useStyles = makeStyles((theme: Theme) => ({
   },
 }));
 
-interface InvitePageScreenProps {
-  userName: string;
-  userEmail: string;
-  roomName: string;
-  setUserName: (userName: string) => void;
-  setUserEmail: (userEmail: string) => void;
-  setRoomName: (roomName: string) => void;
-  handleSubmit: (event: FormEvent<HTMLFormElement>) => void;
-}
-
 const queryString = require('query-string');
 const parsed = queryString.parse(window.location.search);
 
 console.log('hostId: ', parsed.hostId);
 
-export default function InvitePage({
-  userName,
-  userEmail,
-  roomName,
-  setUserName,
-  setUserEmail,
-  setRoomName,
-}: InvitePageScreenProps) {
+export default function InvitePage({}) {
   const classes = useStyles();
   const { user } = useAppState();
+
+  var { URLIdentity } = useParams();
+  var { URLMeetingId } = useParams();
+
+  const [userName, setUserName] = useState<string>('');
+  const [userEmail, setUserEmail] = useState<string>('');
+  const [roomName, setRoomName] = useState<string>('');
+
+  useEffect(() => {
+    if (!user) {
+      if (!URLIdentity) {
+        URLIdentity = window.sessionStorage.getItem('URLIdentity');
+      } else {
+        window.sessionStorage.setItem('URLIdentity', URLIdentity);
+      }
+
+      if (!URLMeetingId) {
+        URLMeetingId = window.sessionStorage.getItem('URLMeetingId');
+      } else {
+        window.sessionStorage.setItem('URLMeetingId', URLMeetingId);
+      }
+    }
+
+    if (URLIdentity) {
+      var meetingDisplayName = '';
+      var names: string[];
+
+      if (user?.displayName) {
+        names = user.displayName?.split(' ');
+
+        if (names != null && names?.length > 1) {
+          meetingDisplayName = names[0] + ' ' + names[1].substring(0, 1) + '.';
+        } else {
+          meetingDisplayName = user?.displayName;
+        }
+      } else {
+        names = URLIdentity?.split(' ');
+        if (names != null && names?.length > 1) {
+          meetingDisplayName = names[0] + ' ' + names[1].substring(0, 1) + '.';
+        } else {
+          meetingDisplayName = URLIdentity;
+        }
+      }
+
+      setUserName(meetingDisplayName);
+      if (URLMeetingId) {
+        setRoomName(URLMeetingId);
+      }
+    }
+  }, [user, URLMeetingId, URLIdentity]);
 
   console.log('userName: ', userName);
   console.log('userEmail: ', userEmail);
@@ -101,7 +136,7 @@ export default function InvitePage({
 
   const hasUsername = !window.location.search.includes('customIdentity=true') && user?.displayName;
   return (
-    <>
+    <IntroContainer>
       <Typography variant="h5" className={classes.gutterBottom}>
         You have been invited to a coffeeBreak.
       </Typography>
@@ -157,6 +192,6 @@ export default function InvitePage({
           </Button>
         </Grid>
       </form>
-    </>
+    </IntroContainer>
   );
 }

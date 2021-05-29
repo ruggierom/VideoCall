@@ -108,7 +108,7 @@ export default function PreJoinScreens() {
       // If this app is deployed as a twilio function, don't change the URL because routing isn't supported.
       if (!window.location.origin.includes('twil.io')) {
         console.log(window.encodeURI(`/meetingId/${roomName}/identity/${userName}`));
-        window.history.replaceState(null, '', window.encodeURI(`/meetingId/${roomName}/identity/${userName}`));
+        //window.history.replaceState(null, '', window.encodeURI(`/meetingId/${roomName}/identity/${userName}`));
       }
       setStep(Steps.deviceSelectionStep);
     }

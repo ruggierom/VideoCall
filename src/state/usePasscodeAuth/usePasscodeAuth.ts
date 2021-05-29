@@ -112,7 +112,7 @@ export default function usePasscodeAuth() {
           if (verification?.isValid) {
             setUser({ passcode } as any);
             window.sessionStorage.setItem('passcode', passcode);
-            history.replace(window.location.pathname);
+            //history.replace(window.location.pathname);
           }
         })
         .then(() => setIsAuthReady(true));

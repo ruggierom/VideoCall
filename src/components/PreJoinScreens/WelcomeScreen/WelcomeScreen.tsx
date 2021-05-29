@@ -51,8 +51,8 @@ const useStyles = makeStyles((theme: Theme) => ({
     width: '100%',
   },
   continueButton: {
-    [theme.breakpoints.down('sm')]: {},
-    width: '10em',
+    marginTop: '2em',
+    width: '150px',
   },
   logo: {
     textAlign: 'center',
@@ -98,22 +98,13 @@ export default function WelcomeScreen() {
   const [readyToShow, setReadyToShow] = React.useState(false);
   const { firebaseUser } = useAppState();
 
+  var temp = Array<firestore.DocumentData>();
+
+  console.log('About to call DB');
   if (firebaseUser && firebase.auth().currentUser?.uid) {
-    getUserMeetings();
-  } else {
-    console.log('here');
-  }
-
-  function getUserMeetings() {
-    if (userMeetings.length > 0) {
-      return;
-    }
-
-    var temp = Array<firestore.DocumentData>();
     const db = firebase.firestore();
     const docRef = db.collection('userMeetings').doc(firebase.auth().currentUser?.uid);
 
-    console.log('About to call DB');
     docRef
       .collection('meetings')
       .get()
@@ -135,13 +126,13 @@ export default function WelcomeScreen() {
             } else {
               console.log(temp2.guestPhoto);
             }
-
-            //if (temp2.status === 'Accepted') {
             temp.push(temp2);
           }
-          //}
         });
-        setUserMeetings(temp);
+
+        if (temp.length > 0) {
+          setUserMeetings(temp);
+        }
       });
   }
 
@@ -160,30 +151,6 @@ export default function WelcomeScreen() {
       }
     } else {
       setError(true);
-    }
-  }
-
-  function getDisplayName(meeting: firestore.DocumentData) {
-    if (firebase.auth().currentUser?.uid) {
-      if (meeting.guestUid == firebase.auth().currentUser?.uid) {
-        return meeting.hostDisplayName;
-      } else {
-        return meeting.guestDisplayName;
-      }
-    } else {
-      return meeting.hostDisplayName;
-    }
-  }
-
-  function getPhoto(meeting: firestore.DocumentData) {
-    if (firebase.auth().currentUser?.uid) {
-      if (meeting.guestUid == firebase.auth().currentUser?.uid) {
-        return meeting.hostPhoto;
-      } else {
-        return meeting.guestPhoto;
-      }
-    } else {
-      return meeting.hostPhoto;
     }
   }
 
@@ -244,14 +211,19 @@ export default function WelcomeScreen() {
       )}
 
       {firebaseUser && userMeetings.length === 0 && readyToShow && (
-        <Typography variant="h5" className={classes.displayText}>
-          <div className={classes.content}>No coffeeBreaks scheduled.</div>
-          <div className={classes.content}>Go to the app to schedule one</div>
-        </Typography>
+        <IntroContainer>
+          <Typography variant="h5" className={classes.displayText}>
+            <div className={classes.content}>
+              No coffeeBreaks scheduled.
+              <br />
+              Go to the <a href="https://coffeebreaks.page.link/TG78">app</a> to schedule one!
+            </div>
+          </Typography>
+        </IntroContainer>
       )}
 
       {!firebaseUser && userMeetings.length === 0 && (
-        <div>
+        <IntroContainer>
           <Typography variant="h5" className={classes.displayText}>
             <div className={classes.content}>Welcome to coffeeBreak</div>
             <div className={classes.content}></div>
@@ -267,21 +239,21 @@ export default function WelcomeScreen() {
               </div>
             </div>
 
-            <div className={classes.spacer}>
+            <div className={classes.content}>
               <Button
+                className={classes.continueButton}
                 variant="contained"
                 type="submit"
                 color="primary"
                 onClick={() => {
                   history.replace('/login');
                 }}
-                className={classes.continueButton}
               >
                 Login
               </Button>
             </div>
           </Typography>
-        </div>
+        </IntroContainer>
       )}
     </>
   );

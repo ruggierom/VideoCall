@@ -1,4 +1,5 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
+import { useAppState } from '../../state';
 import IntroContainer from '../IntroContainer/IntroContainer';
 import { Typography, makeStyles, TextField, Grid, Button, InputLabel, Theme } from '@material-ui/core';
 import { AlertPage } from 'twilio/lib/rest/monitor/v1/alert';
@@ -9,6 +10,26 @@ var otherUserName = 'Test';
 var userLookupAlias = '';
 
 const useStyles = makeStyles((theme: Theme) => ({
+  fadeOut: {
+    opacity: 0,
+    transition: 'opacity 2.5s',
+    transitionTimingFunction: 'ease-out',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'rgb(40, 42, 43)',
+    height: '100%',
+  },
+  fadeIn: {
+    opacity: 1,
+    transition: 'opacity 2.5s',
+    transitionTimingFunction: 'ease-in',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'rgb(40, 42, 43)',
+    height: '100%',
+  },
   logo: {
     textAlign: 'center',
   },
@@ -18,18 +39,16 @@ const useStyles = makeStyles((theme: Theme) => ({
   continueButton: {
     [theme.breakpoints.down('sm')]: {
       width: '100%',
-      margin: '1em',
+      margin: '.5em',
     },
   },
   anchor: {
     textDecoration: 'none',
   },
   content: {
-    margin: '1em',
     textAlign: 'center',
   },
   imgDiv: {
-    marginTop: '1em',
     textAlign: 'center',
   },
   submitButton: {
@@ -53,6 +72,7 @@ export default function UserPostMeetingPage() {
   const [userNameAvaialbe, setUserNameAvaialbe] = useState(true);
   const [helperText, sethelperText] = useState('');
   const [showButton, setShowButton] = useState(false);
+  const { firebaseUser } = useAppState();
 
   const classes = useStyles();
 
@@ -142,58 +162,58 @@ export default function UserPostMeetingPage() {
     }
   }
 
+  if (firebaseUser) {
+    return renderUserForm();
+  } else {
+    return renderAnonForm();
+  }
+
   function renderAnonForm() {
     console.log('userNameAvaialbe: ', userNameAvaialbe);
 
     return (
       <IntroContainer>
         <Typography variant="h5" className={classes.content}>
-          <div className={classes.imgDiv}>
-            Congratulations on your 1st coffeeBreak with {otherUserName}.{' '}
-            <a className={classes.anchor} href="https://joincoffeebreak.com">
-              (@testuser)
-            </a>
-          </div>
+          Congratulations on your 1st coffeeBreak with {otherUserName}.{' '}
+          <a className={classes.anchor} href="https://joincoffeebreak.com">
+            (@testuser)
+          </a>
         </Typography>
         <Typography variant="h6" className={classes.content}>
-          <div className={classes.content}>
-            Download the app to join coffeeBreak
-            <div className={classes.imgDiv}>
-              <a href="https://joincoffeebreak.com" className={classes.anchor}>
-                <img width="125px" src="../../../appStore.png"></img>
-              </a>
-            </div>
+          Download the app to join coffeeBreak
+          <div className={classes.imgDiv}>
+            <a href="https://joincoffeebreak.com" className={classes.anchor}>
+              <img width="125px" src="../../../appStore.png"></img>
+            </a>
           </div>
           <div className={classes.content}>
-            <div className={classes.imgDiv}>
-              <div className={classes.textFieldContainer}>
-                <div className={classes.content}>Check if username is available</div>
-                <TextField
-                  fullWidth
-                  size="medium"
-                  error={!userNameAvaialbe}
-                  id="outlined-error-helper-text"
-                  placeholder="You preferred username"
-                  helperText={helperText}
-                  onChange={handleUserNameSearch}
-                  variant="outlined"
-                />
-              </div>
-
-              {showButton && (
-                <Button
-                  variant="contained"
-                  type="submit"
-                  onClick={() => {
-                    window.open('/login', '_self');
-                  }}
-                  color="primary"
-                  className={classes.continueButton}
-                >
-                  Create account
-                </Button>
-              )}
+            <div className={classes.textFieldContainer}>
+              <div className={classes.content}>Check if username is available</div>
+              <TextField
+                fullWidth
+                size="medium"
+                error={!userNameAvaialbe}
+                id="outlined-error-helper-text"
+                placeholder="You preferred username"
+                helperText={helperText}
+                onChange={handleUserNameSearch}
+                variant="outlined"
+              />
             </div>
+
+            {showButton && (
+              <Button
+                variant="contained"
+                type="submit"
+                onClick={() => {
+                  window.open('/login', '_self');
+                }}
+                color="primary"
+                className={classes.continueButton}
+              >
+                Create account
+              </Button>
+            )}
           </div>
         </Typography>
       </IntroContainer>
@@ -205,21 +225,15 @@ export default function UserPostMeetingPage() {
 
     return (
       <IntroContainer>
-        <Typography variant="h5" className={classes.content}>
+        <div>
           <div className={classes.imgDiv}>
             Congratulations on another coffeeBreak with {otherUserName}.{' '}
             <a className={classes.anchor} href="https://joincoffeebreak.com">
               (@testuser)
             </a>
           </div>
-        </Typography>
+        </div>
       </IntroContainer>
     );
-  }
-
-  if (firebase.auth().currentUser) {
-    return renderUserForm();
-  } else {
-    return renderAnonForm();
   }
 }
