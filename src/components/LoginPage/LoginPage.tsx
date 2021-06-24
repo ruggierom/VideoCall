@@ -53,7 +53,9 @@ export default function LoginPage() {
     return (
         <div className="login-page">
             <div className="modal">
-                <div className="modal-brand"></div>
+                <div className="modal-brand">
+                    <img src="/coffeeBreak.png" alt="" />
+                </div>
                 <div className="modal-content">
                     <h5>Sign in or Create account</h5>
                     <div>
