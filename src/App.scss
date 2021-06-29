@@ -1,0 +1,58 @@
+:root {
+    // Primary
+    --themeDarker: #7c3232;
+    --themeDark: #a94343;
+    --themeDarkAlt: #c85050;
+    --themePrimary: #de5858;
+    --themeSecondary: #e26b6b;
+    --themeTertiary: #eb9696;
+    --themeLight: #f5c9c9;
+    --themeLighter: #fae2e2;
+    --themeLighterAlt: #fef8f8;
+    // Foreground
+    --black: #000000;
+    --neutralPrimary: #323130;
+    --neutralPrimaryAlt: #3b3a39;
+    --neutralSecondary: #605e5c;
+    --neutralTertiary: #a19f9d;
+    --white: #ffffff;
+    // Background
+    --neutralTertiaryAlt: #c8c6c4;
+    --neutralDark: #201f1e;
+    --neutralQuaternaryAlt: #e1dfdd;
+    --neutralLight: #edebe9;
+    --neutralLighter: #f3f2f1;
+    --neutralLighterAlt: #faf9f8;
+    // Custom
+    --navAppNameColor: var(--themePrimary);
+    --navIconColor: var(--neutralTertiary);
+    --navThemePrimary: var(--white);
+    --navThemePrimaryAlt: var(--neutralTertiaryAlt);
+
+    --fontColorThemePrimary: var(--white);
+    --fontColorNeutralPrimary: var(--neutralPrimary);
+}
+
+html,
+body,
+#root {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Roboto', sans-serif;
+    min-width: 375px;
+    // min-height: 568px;
+}
+
+body {
+    background-color: var(--white);
+}
+
+h5 {
+    font-size: 1.5rem;
+    font-weight: 400;
+    line-height: 1.334;
+    margin: 1em 0;
+}

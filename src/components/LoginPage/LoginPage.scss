@@ -1,0 +1,43 @@
+.login-page {
+    height: 100%;
+    width: 100%;
+    background-color: var(--neutralPrimary);
+    display: flex;
+    justify-content: center;
+    justify-items: center;
+
+    .modal {
+        margin: auto;
+        display: flex;
+        overflow: hidden;
+        flex-direction: column;
+        .modal-brand {
+            background-color: var(--themePrimary);
+            height: 100px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            img {
+                height: 80px;
+                width: 80px;
+                margin: 0 auto;
+            }
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 56px;
+        }
+    }
+}
+
+@media only screen and (min-width: 964px) {
+    .login-page {
+        .modal {
+            flex-direction: row;
+            .modal-brand {
+                width: 250px;
+                height: auto;
+            }
+        }
+    }
+}
