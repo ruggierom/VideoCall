@@ -11,21 +11,21 @@ import LoginPage from '../components/LoginPage/LoginPage';
 import { useLocation, useHistory } from 'react-router-dom';
 
 export interface StateContextType {
-  error: TwilioError | Error | null;
-  setError(error: TwilioError | Error | null): void;
-  getToken(name: string, room: string, passcode?: string): Promise<{ room_type: RoomType; token: string }>;
-  user?: User | null | { displayName: undefined; photoURL: undefined; passcode?: string };
-  signIn?(passcode?: string): Promise<void>;
-  signOut?(): Promise<void>;
-  isAuthReady?: boolean;
-  isFetching: boolean;
-  firebaseUser: firebase.User;
-  activeSinkId: string;
-  setActiveSinkId(sinkId: string): void;
-  settings: Settings;
-  dispatchSetting: React.Dispatch<SettingsAction>;
-  roomType?: RoomType;
-  updateRecordingRules(room_sid: string, rules: RecordingRules): Promise<object>;
+    error: TwilioError | Error | null;
+    setError(error: TwilioError | Error | null): void;
+    getToken(name: string, room: string, passcode?: string): Promise<{ room_type: RoomType; token: string }>;
+    user?: User | null | { displayName: undefined; photoURL: undefined; passcode?: string };
+    signIn?(passcode?: string): Promise<void>;
+    signOut?(): Promise<void>;
+    isAuthReady?: boolean;
+    isFetching: boolean;
+    firebaseUser: firebase.User;
+    activeSinkId: string;
+    setActiveSinkId(sinkId: string): void;
+    settings: Settings;
+    dispatchSetting: React.Dispatch<SettingsAction>;
+    roomType?: RoomType;
+    updateRecordingRules(room_sid: string, rules: RecordingRules): Promise<object>;
 }
 
 export const StateContext = createContext<StateContextType>(null!);
@@ -40,146 +40,149 @@ export const StateContext = createContext<StateContextType>(null!);
   is ok to call hooks inside if() statements.
 */
 export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
-  const [error, setError] = useState<TwilioError | null>(null);
-  const [isFetching, setIsFetching] = useState(false);
-  const [userLoggedOut, setUserLoggedOut] = useState(false);
-  const [activeSinkId, setActiveSinkId] = useActiveSinkId();
-  const [settings, dispatchSetting] = useReducer(settingsReducer, initialSettings);
-  const [roomType, setRoomType] = useState<RoomType>();
-  const [firebaseUser, setfirebaseUser] = useState<firebase.User>();
-  const history = useHistory();
+    const [error, setError] = useState<TwilioError | null>(null);
+    const [isFetching, setIsFetching] = useState(false);
+    const [userLoggedOut, setUserLoggedOut] = useState(false);
+    const [activeSinkId, setActiveSinkId] = useActiveSinkId();
+    const [settings, dispatchSetting] = useReducer(settingsReducer, initialSettings);
+    const [roomType, setRoomType] = useState<RoomType>();
+    const [firebaseUser, setfirebaseUser] = useState<firebase.User>();
+    const history = useHistory();
 
-  let contextValue = {
-    error,
-    setError,
-    isFetching,
-    activeSinkId,
-    setActiveSinkId,
-    settings,
-    dispatchSetting,
-    roomType,
-    firebaseUser,
-  } as StateContextType;
+    let contextValue = {
+        error,
+        setError,
+        isFetching,
+        activeSinkId,
+        setActiveSinkId,
+        settings,
+        dispatchSetting,
+        roomType,
+        firebaseUser,
+    } as StateContextType;
 
-  if (process.env.REACT_APP_SET_AUTH === 'firebase') {
-    const firebaseConfig = {
-      apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-      authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
-      databaseURL: process.env.REACT_APP_FIREBASE_DATABASE_URL,
-      projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
-      storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
-      messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
-      appId: process.env.REACT_APP_FIREBASE_APP_ID,
-    };
+    React.useEffect(() => {
+        const unsubscribe = firebase.auth().onAuthStateChanged(user => {
+            // detaching the listener
+            if (user) {
+                if (firebaseUser == null) {
+                    setfirebaseUser(user);
+                }
+            } else {
+                setUserLoggedOut(true);
+            }
+        });
+        return () => unsubscribe(); // unsubscribing from the listener when the component is unmounting.
+    }, []);
 
-    if (firebase.apps.length === 0) {
-      firebase.initializeApp(firebaseConfig);
+    if (process.env.REACT_APP_SET_AUTH === 'firebase') {
+        const firebaseConfig = {
+            apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+            authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+            databaseURL: process.env.REACT_APP_FIREBASE_DATABASE_URL,
+            projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+            storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+            messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+            appId: process.env.REACT_APP_FIREBASE_APP_ID,
+        };
 
-      firebase.auth().onAuthStateChanged(user => {
-        if (user) {
-          setfirebaseUser(user);
-          console.log('user: ', user);
-        } else {
-          console.log('user logged out');
-          setUserLoggedOut(true);
-          //history.replace('/');
+        if (firebase.apps.length === 0) {
+            firebase.initializeApp(firebaseConfig);
         }
-      });
+
+        contextValue = {
+            ...contextValue,
+            ...useFirebaseAuth(), // eslint-disable-line react-hooks/rules-of-hooks
+        };
+    } else {
+        contextValue = {
+            ...contextValue,
+            getToken: async (user_identity, room_name) => {
+                const endpoint = process.env.REACT_APP_TOKEN_ENDPOINT || '/token';
+                return fetch(endpoint, {
+                    mode: 'no-cors',
+                    method: 'POST',
+                    headers: {
+                        'content-type': 'application/json',
+                        'Access-Control-Allow-Origin': '*',
+                    },
+                    body: JSON.stringify({
+                        user_identity,
+                        room_name,
+                        create_conversation: process.env.REACT_APP_DISABLE_TWILIO_CONVERSATIONS !== 'true',
+                    }),
+                }).then(res => res.json());
+            },
+            updateRecordingRules: async (room_sid, rules) => {
+                const endpoint = process.env.REACT_APP_TOKEN_ENDPOINT || '/recordingrules';
+
+                return fetch(endpoint, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ room_sid, rules }),
+                    method: 'POST',
+                })
+                    .then(async res => {
+                        const jsonResponse = await res.json();
+
+                        if (!res.ok) {
+                            const recordingError = new Error(
+                                jsonResponse.error?.message || 'There was an error updating recording rules'
+                            );
+                            recordingError.code = jsonResponse.error?.code;
+                            return Promise.reject(recordingError);
+                        }
+
+                        return jsonResponse;
+                    })
+                    .catch(err => setError(err));
+            },
+        };
     }
 
-    contextValue = {
-      ...contextValue,
-      ...useFirebaseAuth(), // eslint-disable-line react-hooks/rules-of-hooks
+    const getToken: StateContextType['getToken'] = (name, room) => {
+        setIsFetching(true);
+        return contextValue
+            .getToken(name, room)
+            .then(res => {
+                setRoomType(res.room_type);
+                setIsFetching(false);
+                return res;
+            })
+            .catch(err => {
+                setError(err);
+                setIsFetching(false);
+                return Promise.reject(err);
+            });
     };
-  } else {
-    contextValue = {
-      ...contextValue,
-      getToken: async (user_identity, room_name) => {
-        const endpoint = process.env.REACT_APP_TOKEN_ENDPOINT || '/token';
-        return fetch(endpoint, {
-          mode: 'no-cors',
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-          body: JSON.stringify({
-            user_identity,
-            room_name,
-            create_conversation: process.env.REACT_APP_DISABLE_TWILIO_CONVERSATIONS !== 'true',
-          }),
-        }).then(res => res.json());
-      },
-      updateRecordingRules: async (room_sid, rules) => {
-        const endpoint = process.env.REACT_APP_TOKEN_ENDPOINT || '/recordingrules';
 
-        return fetch(endpoint, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ room_sid, rules }),
-          method: 'POST',
-        })
-          .then(async res => {
-            const jsonResponse = await res.json();
-
-            if (!res.ok) {
-              const recordingError = new Error(
-                jsonResponse.error?.message || 'There was an error updating recording rules'
-              );
-              recordingError.code = jsonResponse.error?.code;
-              return Promise.reject(recordingError);
-            }
-
-            return jsonResponse;
-          })
-          .catch(err => setError(err));
-      },
+    const updateRecordingRules: StateContextType['updateRecordingRules'] = (room_sid, rules) => {
+        setIsFetching(true);
+        return contextValue
+            .updateRecordingRules(room_sid, rules)
+            .then(res => {
+                setIsFetching(false);
+                return res;
+            })
+            .catch(err => {
+                setError(err);
+                setIsFetching(false);
+                return Promise.reject(err);
+            });
     };
-  }
 
-  const getToken: StateContextType['getToken'] = (name, room) => {
-    setIsFetching(true);
-    return contextValue
-      .getToken(name, room)
-      .then(res => {
-        setRoomType(res.room_type);
-        setIsFetching(false);
-        return res;
-      })
-      .catch(err => {
-        setError(err);
-        setIsFetching(false);
-        return Promise.reject(err);
-      });
-  };
-
-  const updateRecordingRules: StateContextType['updateRecordingRules'] = (room_sid, rules) => {
-    setIsFetching(true);
-    return contextValue
-      .updateRecordingRules(room_sid, rules)
-      .then(res => {
-        setIsFetching(false);
-        return res;
-      })
-      .catch(err => {
-        setError(err);
-        setIsFetching(false);
-        return Promise.reject(err);
-      });
-  };
-
-  return (
-    <StateContext.Provider value={{ ...contextValue, getToken, updateRecordingRules }}>
-      {props.children}
-    </StateContext.Provider>
-  );
+    return (
+        <StateContext.Provider value={{ ...contextValue, getToken, updateRecordingRules }}>
+            {props.children}
+        </StateContext.Provider>
+    );
 }
 
 export function useAppState() {
-  const context = useContext(StateContext);
-  if (!context) {
-    throw new Error('useAppState must be used within the AppStateProvider');
-  }
-  return context;
+    const context = useContext(StateContext);
+    if (!context) {
+        throw new Error('useAppState must be used within the AppStateProvider');
+    }
+    return context;
 }

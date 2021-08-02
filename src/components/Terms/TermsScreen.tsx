@@ -2,40 +2,51 @@ import React from 'react';
 import styled from 'styled-components';
 
 export default function Terms() {
-  const Wrapper = styled.div`
-    min-height: calc(100vh - 50px);
-    background-color: #00bfff;
-    padding: 20px;
+    const imgUrl = process.env.PUBLIC_URL + '/coffeeBreak.png';
+    const Wrapper = styled.div`
+        min-height: calc(100vh - 50px);
+        background-color: #00bfff;
+        padding: 20px;
 
-    span {
-      color: #fff;
-      font-size: 40px;
-    }
+        span {
+            color: #fff;
+            font-size: 40px;
+        }
 
-    section {
-      color: #fff;
-    }
-  `;
+        twiliologo: {
+            position: 'absolute';
+            top: 10;
+            left: 5;
+            width: '40px';
+        }
+        section {
+            color: #fff;
+        }
+    `;
 
-  return (
-    <Wrapper>
-      <span>Terms</span>
-      <section>
-        <p>
-          Morbi sodales at enim sed porttitor. Vestibulum vitae magna consequat, faucibus felis non, fermentum lorem.
-          Vivamus viverra est justo. Suspendisse lacus nisi, ornare gravida lorem sit amet, iaculis vulputate elit.
-          Vivamus non erat at nunc egestas sagittis eget ac urna. Proin ac iaculis ante. Proin tincidunt ipsum eu
-          pharetra lobortis. Nam auctor fermentum turpis, facilisis iaculis odio hendrerit ac. Pellentesque habitant
-          morbi tristique senectus et netus et malesuada fames ac turpis egestas. In hendrerit, dolor eu consequat
-          porttitor, ante nibh sodales libero, a finibus nisl diam ac tellus.
-        </p>
-        <p>
-          Nulla ornare a dui pellentesque imperdiet. Fusce nec dolor semper, aliquet risus eget, dignissim nisl.
-          Vestibulum nec iaculis metus. Nam vitae volutpat dui, non ultricies eros. Aenean vitae leo laoreet, faucibus
-          lorem a, sagittis libero. Nulla id dignissim augue. Quisque laoreet tristique purus, eu rutrum mi consequat
-          ut.
-        </p>
-      </section>
-    </Wrapper>
-  );
+    return (
+        <Wrapper>
+            <div>
+                <a href="/welcome">
+                    <img width="50" id="1" className="twilioLogo" src={imgUrl}></img>
+                </a>
+            </div>
+            <span>Terms</span>
+            <section>
+                <p>
+                    Curabitur eu feugiat magna, ut malesuada est. In sit amet placerat erat, quis ornare augue. Proin mi
+                    nulla, pretium vel dictum vel, ornare sed tellus. Phasellus congue placerat metus. Cras eleifend
+                    justo quis hendrerit bibendum. Aliquam erat volutpat. Nulla sed neque at ante iaculis mollis a id
+                    sem. Suspendisse potenti.
+                </p>
+                <p>
+                    Praesent eu lorem euismod, convallis nisl in, cursus metus. Cras dolor eros, fringilla id erat et,
+                    sollicitudin rhoncus lectus. Phasellus non vestibulum massa, vel ornare ligula. Quisque accumsan leo
+                    eget nibh mattis tempor. Nunc imperdiet diam ut enim viverra, non porta lorem bibendum. Phasellus et
+                    pulvinar enim. Nunc elementum quam metus, et venenatis nunc viverra eget. Sed quis lacinia enim. Ut
+                    sit amet elementum lacus, nec porta elit. Sed dignissim feugiat vehicula. Nunc et commodo orci.
+                </p>
+            </section>
+        </Wrapper>
+    );
 }
