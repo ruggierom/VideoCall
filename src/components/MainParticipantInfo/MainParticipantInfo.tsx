@@ -32,328 +32,328 @@ const queryString = require('query-string');
 const parsed = queryString.parse(window.location.search);
 
 const useStyles = makeStyles((theme: Theme) => ({
-  '@keyframes blinker': {
-    '50%': {
-      opacity: 0,
+    '@keyframes blinker': {
+        '50%': {
+            opacity: 0,
+        },
     },
-  },
-  debug: {
-    marginTop: '60px',
-    color: 'white',
-  },
-  twoMinWarning: {
-    fontFamily: 'inherit',
-    animation: '$blinker 2s linear infinite',
-    color: 'white',
-    fontStyle: 'bold',
-    position: 'absolute',
-    bottom: '10px',
-    width: '100%',
-    textAlign: 'center',
-    fontSize: '2.0em',
-  },
-  container: {
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'center',
-  },
-  identity: {
-    background: 'rgba(0, 0, 0, 0.5)',
-    color: 'white',
-    padding: '0.1em 1em .1em 0',
-    fontSize: '1.2em',
-    display: 'flex',
-    width: '19em',
-    height: '5em',
-    '& svg': {
-      marginLeft: '0.3em',
+    debug: {
+        marginTop: '60px',
+        color: 'white',
     },
-  },
-  infoContainer: {
-    position: 'absolute',
-    zIndex: 2,
-    height: '100%',
-    width: '100%',
-  },
-  reconnectingContainer: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: 'rgba(40, 42, 43, 0.75)',
-    zIndex: 1,
-  },
-  fullWidth: {
-    gridArea: '1 / 1 / 2 / 3',
-    [theme.breakpoints.down('sm')]: {
-      gridArea: '1 / 1 / 3 / 3',
+    twoMinWarning: {
+        fontFamily: 'inherit',
+        animation: '$blinker 2s linear infinite',
+        color: 'white',
+        fontStyle: 'bold',
+        position: 'absolute',
+        bottom: '10px',
+        width: '100%',
+        textAlign: 'center',
+        fontSize: '2.0em',
     },
-  },
-  avatarContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: 'black',
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    zIndex: 1,
-    '& svg': {
-      transform: 'scale(2)',
+    container: {
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
     },
-  },
-  circle: {
-    height: '12px',
-    width: '12px',
-    background: 'red',
-    borderRadius: '100%',
-    margin: '0 0.6em',
-    animation: `1.25s $pulsate ease-out infinite`,
-  },
-  '@keyframes pulsate': {
-    '0%': {
-      background: `#A90000`,
+    identity: {
+        background: 'rgba(0, 0, 0, 0.5)',
+        color: 'white',
+        padding: '0.1em 1em .1em 0',
+        fontSize: '1.2em',
+        display: 'flex',
+        width: '19em',
+        height: '5em',
+        '& svg': {
+            marginLeft: '0.3em',
+        },
     },
-    '50%': {
-      background: '#f00',
+    infoContainer: {
+        position: 'absolute',
+        zIndex: 2,
+        height: '100%',
+        width: '100%',
     },
-    '100%': {
-      background: '#A90000',
+    reconnectingContainer: {
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'rgba(40, 42, 43, 0.75)',
+        zIndex: 1,
     },
-  },
+    fullWidth: {
+        gridArea: '1 / 1 / 2 / 3',
+        [theme.breakpoints.down('sm')]: {
+            gridArea: '1 / 1 / 3 / 3',
+        },
+    },
+    avatarContainer: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'black',
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
+        zIndex: 1,
+        '& svg': {
+            transform: 'scale(2)',
+        },
+    },
+    circle: {
+        height: '12px',
+        width: '12px',
+        background: 'red',
+        borderRadius: '100%',
+        margin: '0 0.6em',
+        animation: `1.25s $pulsate ease-out infinite`,
+    },
+    '@keyframes pulsate': {
+        '0%': {
+            background: `#A90000`,
+        },
+        '50%': {
+            background: '#f00',
+        },
+        '100%': {
+            background: '#A90000',
+        },
+    },
 }));
 
 interface MainParticipantInfoProps {
-  participant: Participant;
-  children: React.ReactNode;
+    participant: Participant;
+    children: React.ReactNode;
 }
 
 export default function MainParticipantInfo({ participant, children }: MainParticipantInfoProps) {
-  const { width, height } = useWindowSize();
-  const classes = useStyles();
-  const { room } = useVideoContext();
-  const localParticipant = room!.localParticipant;
-  const isLocal = localParticipant === participant;
-  const screenShareParticipant = useScreenShareParticipant();
-  const isRemoteParticipantScreenSharing = screenShareParticipant && screenShareParticipant !== localParticipant;
-  const publications = usePublications(participant);
-  const videoPublication = publications.find(p => p.trackName.includes('camera'));
-  const screenSharePublication = publications.find(p => p.trackName.includes('screen'));
-  const videoTrack = useTrack(screenSharePublication || videoPublication);
-  const isVideoEnabled = Boolean(videoTrack);
-  const audioPublication = publications.find(p => p.kind === 'audio');
-  const audioTrack = useTrack(audioPublication) as LocalAudioTrack | RemoteAudioTrack | undefined;
-  const isVideoSwitchedOff = useIsTrackSwitchedOff(videoTrack as LocalVideoTrack | RemoteVideoTrack);
-  const isParticipantReconnecting = useParticipantIsReconnecting(participant);
+    const { width, height } = useWindowSize();
+    const classes = useStyles();
+    const { room } = useVideoContext();
+    const localParticipant = room!.localParticipant;
+    const isLocal = localParticipant === participant;
+    const screenShareParticipant = useScreenShareParticipant();
+    const isRemoteParticipantScreenSharing = screenShareParticipant && screenShareParticipant !== localParticipant;
+    const publications = usePublications(participant);
+    const videoPublication = publications.find(p => p.trackName.includes('camera'));
+    const screenSharePublication = publications.find(p => p.trackName.includes('screen'));
+    const videoTrack = useTrack(screenSharePublication || videoPublication);
+    const isVideoEnabled = Boolean(videoTrack);
+    const audioPublication = publications.find(p => p.kind === 'audio');
+    const audioTrack = useTrack(audioPublication) as LocalAudioTrack | RemoteAudioTrack | undefined;
+    const isVideoSwitchedOff = useIsTrackSwitchedOff(videoTrack as LocalVideoTrack | RemoteVideoTrack);
+    const isParticipantReconnecting = useParticipantIsReconnecting(participant);
 
-  function setDurationFromQueryString() {
-    if (room?.name === 'test99' && parsed.duration) {
-      clearStartTimeFromDb();
-      meetingDuration = Number(parsed.duration);
+    function setDurationFromQueryString() {
+        if (room?.name === 'test99' && parsed.duration) {
+            clearStartTimeFromDb();
+            meetingDuration = Number(parsed.duration);
+        }
     }
-  }
 
-  function clearStartTimeFromDb() {
-    try {
-      const docRef = firebase
-        .firestore()
-        .collection('meetingStartInfo')
-        .doc(room?.name)
-        .delete()
-        .then(() => {
-          console.log('Document successfully deleted!');
-        })
-        .catch(error => {
-          console.error('Error removing document: ', error);
-        });
-    } catch (error) {
-      console.log(error);
+    function clearStartTimeFromDb() {
+        try {
+            const docRef = firebase
+                .firestore()
+                .collection('meetingStartInfo')
+                .doc(room?.name)
+                .delete()
+                .then(() => {
+                    console.log('Document successfully deleted!');
+                })
+                .catch(error => {
+                    console.error('Error removing document: ', error);
+                });
+        } catch (error) {
+            console.log(error);
+        }
     }
-  }
 
-  function shutDown() {
-    const handle = setTimeout(() => {
-      try {
-        window.sessionStorage.setItem('meetingStatus', 'Complete');
-        room?.disconnect();
-      } catch (e) {}
-    }, 8000);
-  }
+    function shutDown() {
+        const handle = setTimeout(() => {
+            try {
+                window.sessionStorage.setItem('meetingStatus', 'Complete');
+                room?.disconnect();
+            } catch (e) {}
+        }, 8000);
+    }
 
-  async function startIfBothConnected() {
-    console.log('roomname: ' + room?.name);
-    console.log('localParticipant: ' + room?.localParticipant);
+    async function startIfBothConnected() {
+        console.log('roomname: ' + room?.name);
+        console.log('localParticipant: ' + room?.localParticipant);
 
+        setDurationFromQueryString();
+
+        try {
+            if (room?.participants.entries().next().value != undefined) {
+                if (
+                    room?.participants.entries().next().value[1].state === 'connected' &&
+                    localParticipant.state === 'connected'
+                ) {
+                    await setStartTime();
+                    showWaiting = false;
+                    return renderMeetingInfo();
+                } else {
+                    showWaiting = true;
+                    console.log('remote: ', room?.participants.entries().next().value[1].state);
+                    console.log('local: ', localParticipant.state);
+                }
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    console.log('GHGGGJKGJKGJKGJGJGJGJKGJGJKGJGJGJKHGJKGJHKGKJGJ');
     setDurationFromQueryString();
 
-    try {
-      if (room?.participants.entries().next().value != undefined) {
-        if (
-          room?.participants.entries().next().value[1].state === 'connected' &&
-          localParticipant.state === 'connected'
-        ) {
-          await setStartTime();
-          showWaiting = false;
-          return renderMeetingInfo();
-        } else {
-          showWaiting = true;
-          console.log('remote: ', room?.participants.entries().next().value[1].state);
-          console.log('local: ', localParticipant.state);
-        }
-      }
-    } catch (e) {
-      console.log(e);
-    }
-  }
+    startIfBothConnected();
 
-  console.log('GHGGGJKGJKGJKGJGJGJGJKGJGJKGJGJGJKHGJKGJHKGKJGJ');
-  setDurationFromQueryString();
+    async function setStartTime() {
+        try {
+            const docRef = firebase
+                .firestore()
+                .collection('meetingStartInfo')
+                .doc(room?.name);
 
-  startIfBothConnected();
-
-  async function setStartTime() {
-    try {
-      const docRef = firebase
-        .firestore()
-        .collection('meetingStartInfo')
-        .doc(room?.name);
-
-      await docRef.get().then(doc => {
-        if (doc.exists) {
-          startTime = Number(doc.data()['startTime']);
-          showWaiting = false;
-          showRemainingTime = true;
-        } else {
-          startTime = Date.now();
-          firebase
-            .firestore()
-            .collection('meetingStartInfo')
-            .doc(room?.name)
-            .set({
-              startTime: startTime,
-            })
-            .then(() => {
-              startTime = Date.now();
-            })
-            .catch(error => {
-              console.error('Error writing document: ', error);
+            await docRef.get().then(doc => {
+                if (doc.exists) {
+                    startTime = Number(doc.data()['startTime']);
+                    showWaiting = false;
+                    showRemainingTime = true;
+                } else {
+                    startTime = Date.now();
+                    firebase
+                        .firestore()
+                        .collection('meetingStartInfo')
+                        .doc(room?.name)
+                        .set({
+                            startTime: startTime,
+                        })
+                        .then(() => {
+                            startTime = Date.now();
+                        })
+                        .catch(error => {
+                            console.error('Error writing document: ', error);
+                        });
+                }
+                showWaiting = false;
             });
+        } catch (error) {
+            console.log(error);
         }
-        showWaiting = false;
-      });
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
-  function formatTime(minutes: number, seconds: number) {
-    var strMin = '';
-    var strSec = '';
-
-    if (minutes < 10) {
-      strMin = '0' + minutes.toString();
-    } else {
-      strMin = minutes.toString();
     }
 
-    if (seconds < 10) {
-      strSec = '0' + seconds.toString();
-    } else {
-      strSec = seconds.toString();
+    function formatTime(minutes: number, seconds: number) {
+        var strMin = '';
+        var strSec = '';
+
+        if (minutes < 10) {
+            strMin = '0' + minutes.toString();
+        } else {
+            strMin = minutes.toString();
+        }
+
+        if (seconds < 10) {
+            strSec = '0' + seconds.toString();
+        } else {
+            strSec = seconds.toString();
+        }
+
+        return strMin + ':' + strSec;
     }
 
-    return strMin + ':' + strSec;
-  }
+    const renderer = ({ api, hours, minutes, seconds, completed }: CountdownRenderProps) => {
+        if (minutes <= 1 && minutes > 0 && seconds > 0) {
+            showTwoMinWarning = true;
+            console.log('2 min warn');
+            return (
+                <span>
+                    Remaining time: {formatTime(minutes, seconds)}{' '}
+                    <span>
+                        <TwoMinWarn />
+                    </span>{' '}
+                </span>
+            );
+        }
 
-  const renderer = ({ api, hours, minutes, seconds, completed }: CountdownRenderProps) => {
-    if (minutes <= 1 && minutes > 0 && seconds > 0) {
-      showTwoMinWarning = true;
-      console.log('2 min warn');
-      return (
-        <span>
-          Remaining time: {formatTime(minutes, seconds)}{' '}
-          <span>
-            <TwoMinWarn />
-          </span>{' '}
-        </span>
-      );
-    }
+        if (startTime > 0 && minutes > 0 && seconds > 0) {
+            return <span>Remaining time: {formatTime(minutes, seconds)}</span>;
+        }
 
-    if (startTime > 0 && minutes > 0 && seconds > 0) {
-      return <span>Remaining time: {formatTime(minutes, seconds)}</span>;
-    }
+        if (minutes === 0 && seconds === 0 && completed) {
+            showRemainingTime = false;
+            return (
+                <span>
+                    Another successful coffeeBreak!
+                    <Confetti
+                        width={width}
+                        height={height}
+                        numberOfPieces={800}
+                        opacity={0.5}
+                        initialVelocityX={8}
+                        initialVelocityY={20}
+                    />
+                    {shutDown()}
+                </span>
+            );
+        }
+        return <span>Remaining time: {formatTime(minutes, seconds)}</span>;
+    };
 
-    if (minutes === 0 && seconds === 0 && completed) {
-      showRemainingTime = false;
-      return (
-        <span>
-          Another successful coffeeBreak!
-          <Confetti
-            width={width}
-            height={height}
-            numberOfPieces={800}
-            opacity={0.5}
-            initialVelocityX={8}
-            initialVelocityY={20}
-          />
-          {shutDown()}
-        </span>
-      );
-    }
-    return <span>Remaining time: {formatTime(minutes, seconds)}</span>;
-  };
+    function renderMeetingInfo() {
+        const imgUrl = process.env.PUBLIC_URL + '/coffeeBreak.png';
+        return (
+            <div
+                data-cy-main-participant
+                data-cy-participant={participant.identity}
+                className={clsx(classes.container, {
+                    [classes.fullWidth]: !isRemoteParticipantScreenSharing,
+                })}
+            >
+                <div className={classes.infoContainer}>
+                    <div className={classes.identity}>
+                        <img width="50px" id="3" height="50px" src={imgUrl}></img>
+                        <AudioLevelIndicator audioTrack={audioTrack} />
 
-  function renderMeetingInfo() {
-    const imgUrl = process.env.PUBLIC_URL + '/coffeeBreak.png';
-    return (
-      <div
-        data-cy-main-participant
-        data-cy-participant={participant.identity}
-        className={clsx(classes.container, {
-          [classes.fullWidth]: !isRemoteParticipantScreenSharing,
-        })}
-      >
-        <div className={classes.infoContainer}>
-          <div className={classes.identity}>
-            <img width="50px" id="3" height="50px" src={imgUrl}></img>
-            <AudioLevelIndicator audioTrack={audioTrack} />
+                        <Typography component={'span'} variant="body1" color="inherit">
+                            {participant.identity}
+                            <div>{isLocal && '(You)'}</div>
 
-            <Typography component={'span'} variant="body1" color="inherit">
-              {participant.identity}
-              <div>{isLocal && '(You)'}</div>
+                            {showWaiting && <MeetingNotStarted />}
 
-              {showWaiting && <MeetingNotStarted />}
-
-              {showRemainingTime && startTime > 0 && (
-                <div style={{ fontFamily: 'inherit', marginTop: '.25em', marginBottom: '.75em' }}>
-                  <Countdown date={startTime + meetingDuration} renderer={renderer} />
+                            {showRemainingTime && startTime > 0 && (
+                                <div style={{ fontFamily: 'inherit', marginTop: '.25em', marginBottom: '.75em' }}>
+                                    <Countdown date={startTime + meetingDuration} renderer={renderer} />
+                                </div>
+                            )}
+                        </Typography>
+                    </div>
                 </div>
-              )}
-            </Typography>
-          </div>
-        </div>
-        {(!isVideoEnabled || isVideoSwitchedOff) && (
-          <div className={classes.avatarContainer}>
-            <AvatarIcon />
-          </div>
-        )}
-        {isParticipantReconnecting && (
-          <div className={classes.reconnectingContainer}>
-            <Typography component={'span'} variant="body1" style={{ color: 'white' }}>
-              Reconnecting...
-            </Typography>
-          </div>
-        )}
-        {children}
-      </div>
-    );
-  }
+                {(!isVideoEnabled || isVideoSwitchedOff) && (
+                    <div className={classes.avatarContainer}>
+                        <AvatarIcon />
+                    </div>
+                )}
+                {isParticipantReconnecting && (
+                    <div className={classes.reconnectingContainer}>
+                        <Typography component={'span'} variant="body1" style={{ color: 'white' }}>
+                            Reconnecting...
+                        </Typography>
+                    </div>
+                )}
+                {children}
+            </div>
+        );
+    }
 
-  return renderMeetingInfo();
+    return renderMeetingInfo();
 }

@@ -41,7 +41,6 @@ const useStyles = makeStyles((theme: Theme) => ({
     container: {
         position: 'relative',
         flex: '1',
-        width: '888px',
     },
     innerContainer: {
         display: 'flex',
@@ -127,7 +126,6 @@ const useStyles = makeStyles((theme: Theme) => ({
     },
     title: {
         color: 'white',
-        margin: '1em 0 0',
         [theme.breakpoints.down('sm')]: {
             margin: 0,
             fontSize: '1.1rem',
