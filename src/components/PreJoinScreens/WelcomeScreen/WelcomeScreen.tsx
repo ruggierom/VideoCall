@@ -273,7 +273,7 @@ export default function WelcomeScreen() {
             {!firebaseUser && userMeetings.length === 0 && (
                 <IntroContainer>
                     <Typography variant="h5" className={classes.displayText}>
-                        <div className={classes.content}>Welcome to coffeeBreak</div>
+                        <div className={classes.content}>Welcome to coffeeBreaks</div>
                         <div className={classes.content}></div>
                     </Typography>
 
