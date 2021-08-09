@@ -16,6 +16,7 @@ import CloseIcon from '@material-ui/icons/Close';
 import { app } from 'firebase-admin';
 import { useLocation, useHistory } from 'react-router-dom';
 import { Print } from '@material-ui/icons';
+import { useParams } from 'react-router-dom';
 
 const useStyles = makeStyles((theme: Theme) => ({
     root: {
@@ -94,6 +95,8 @@ const useStyles = makeStyles((theme: Theme) => ({
 }));
 
 export default function WelcomeScreen() {
+    let location = useLocation();
+
     var temp = Array<firestore.DocumentData>();
     var [userMeetings, setUserMeetings] = useState(Array<firestore.DocumentData>());
     const [error, setError] = React.useState(false);
@@ -187,6 +190,10 @@ export default function WelcomeScreen() {
         }
     }
 
+    const imageClick = () => {
+        alert('Email invite@joincoffeebreak.com to get early access to the app!');
+    };
+
     const classes = useStyles();
     const { user } = useAppState();
     const history = useHistory();
@@ -274,9 +281,7 @@ export default function WelcomeScreen() {
                         <div className={classes.content}>
                             Download the app to join
                             <div className={classes.imgDiv}>
-                                <a href="https://joincoffeebreak.com" className={classes.anchor}>
-                                    <img width="125px" src="../../../appStore.png"></img>
-                                </a>
+                                <img onClick={() => imageClick()} width="125px" src="../../../appStore.png"></img>
                             </div>
                         </div>
 

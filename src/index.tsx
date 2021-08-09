@@ -66,10 +66,10 @@ ReactDOM.render(
                             <LoginPage />
                         </Route>
                         <Route path="/invite/meetingId/:URLMeetingId/identity/:URLIdentity">
-                            <VideoApp />
+                            <InvitePage />
                         </Route>
                         <Route path="/">
-                            <LoginPage />
+                            <WelcomeScreen />
                         </Route>
                     </Switch>
                 </AppStateProvider>

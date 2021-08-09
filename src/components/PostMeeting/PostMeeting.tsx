@@ -5,6 +5,8 @@ import { Typography, makeStyles, TextField, Grid, Button, InputLabel, Theme } fr
 import { AlertPage } from 'twilio/lib/rest/monitor/v1/alert';
 import firebase from 'firebase/app';
 import 'firebase/firestore';
+import { Comment } from '@material-ui/icons';
+import { Alert } from '@material-ui/lab';
 
 var otherUserName = 'Test';
 var userLookupAlias = '';
@@ -56,6 +58,10 @@ export default function UserPostMeetingPage() {
 
     const classes = useStyles();
 
+    const imageClick = () => {
+        alert('Email invite@joincoffeebreak.com to get early access to the app!');
+    };
+
     const handleUserNameSearch = (event: ChangeEvent<HTMLInputElement>) => {
         var temp = onlyAlphabet(event.target.value);
         event.target.value = temp;
@@ -95,7 +101,6 @@ export default function UserPostMeetingPage() {
                 setReadyToShow(true);
                 querySnapshot.forEach(doc => {
                     const d = doc.data()['startDateTimeAsDate'];
-
                     const min = d.toMillis() - 5 * 60 * 1000;
                     const max = d.toMillis() + 15 * 60 * 1000;
                     const nowInMil = Date.now();
@@ -123,20 +128,25 @@ export default function UserPostMeetingPage() {
         try {
             const docRef = firebase
                 .firestore()
-                .collection('userNames')
-                .doc(usernameToCheck.toLowerCase());
-
-            docRef.get().then(doc => {
-                if (doc.exists) {
-                    setUserNameAvaialbe(false);
-                    sethelperText('Username is not available!');
-                    setShowButton(false);
-                } else {
-                    setUserNameAvaialbe(true);
-                    sethelperText('Username is available!');
-                    setShowButton(true);
-                }
-            });
+                .collection('users')
+                .where('userHandle', '==', usernameToCheck.toLocaleLowerCase())
+                .get()
+                .then(querySnapshot => {
+                    querySnapshot.forEach(doc => {
+                        if (doc.exists) {
+                            setUserNameAvaialbe(false);
+                            sethelperText('Username is not available!');
+                            setShowButton(false);
+                        } else {
+                            setUserNameAvaialbe(true);
+                            sethelperText('Username is available!');
+                            setShowButton(true);
+                        }
+                    });
+                })
+                .catch((error: any) => {
+                    console.log('Error getting documents: ', error);
+                });
         } catch (error) {
             console.log(error);
         }
@@ -152,53 +162,50 @@ export default function UserPostMeetingPage() {
         console.log('userNameAvaialbe: ', userNameAvaialbe);
 
         return (
-            <div className={classes.fadeIn}>
-                <IntroContainer>
-                    <Typography variant="h5" className={classes.content}>
-                        Congratulations on your 1st coffeeBreak with {otherUserName}.{' '}
-                        <a className={classes.anchor} href="https://joincoffeebreak.com">
-                            (@testuser)
-                        </a>
-                    </Typography>
-                    <Typography variant="h6" className={classes.content}>
-                        Download the app to join coffeeBreak
+            <IntroContainer>
+                <Typography variant="h5" className={classes.content}>
+                    Congratulations on a successful coffeeBreak!
+                </Typography>
+                <p></p>
+                <Typography variant="h6" className={classes.content}>
+                    <div className={classes.content}>
+                        Download the app to join
                         <div className={classes.imgDiv}>
-                            <a href="https://joincoffeebreak.com" className={classes.anchor}>
-                                <img width="125px" src="../../../appStore.png"></img>
-                            </a>
+                            <img onClick={() => imageClick()} width="125px" src="../../../../appStore.png"></img>
                         </div>
-                        <div className={classes.content}>
-                            <div className={classes.textFieldContainer}>
-                                <div className={classes.content}>Check if username is available</div>
-                                <TextField
-                                    fullWidth
-                                    size="medium"
-                                    error={!userNameAvaialbe}
-                                    id="outlined-error-helper-text"
-                                    placeholder="You preferred username"
-                                    helperText={helperText}
-                                    onChange={handleUserNameSearch}
-                                    variant="outlined"
-                                />
-                            </div>
+                    </div>
+                    <p></p>
+                    <div className={classes.content}>
+                        <div className={classes.textFieldContainer}>
+                            <div className={classes.content}>Check if username is available</div>
+                            <TextField
+                                fullWidth
+                                size="medium"
+                                error={!userNameAvaialbe}
+                                id="outlined-error-helper-text"
+                                placeholder="You preferred username"
+                                helperText={helperText}
+                                onChange={handleUserNameSearch}
+                                variant="outlined"
+                            />
+                        </div>
 
-                            {showButton && (
-                                <Button
-                                    variant="contained"
-                                    type="submit"
-                                    onClick={() => {
-                                        window.open('/login', '_self');
-                                    }}
-                                    color="primary"
-                                    className={classes.continueButton}
-                                >
-                                    Create account
-                                </Button>
-                            )}
-                        </div>
-                    </Typography>
-                </IntroContainer>
-            </div>
+                        {showButton && (
+                            <Button
+                                variant="contained"
+                                type="submit"
+                                onClick={() => {
+                                    window.open('/login', '_self');
+                                }}
+                                color="primary"
+                                className={classes.continueButton}
+                            >
+                                Create account
+                            </Button>
+                        )}
+                    </div>
+                </Typography>
+            </IntroContainer>
         );
     }
 
@@ -208,12 +215,9 @@ export default function UserPostMeetingPage() {
         return (
             <IntroContainer>
                 <div>
-                    <div className={classes.imgDiv}>
-                        Congratulations on another coffeeBreak with {otherUserName}.{' '}
-                        <a className={classes.anchor} href="https://joincoffeebreak.com">
-                            (@testuser)
-                        </a>
-                    </div>
+                    <Typography variant="h5" className={classes.content}>
+                        Congratulations on a successful coffeeBreak!
+                    </Typography>
                 </div>
             </IntroContainer>
         );
