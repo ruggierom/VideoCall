@@ -7,6 +7,7 @@ import firebase from 'firebase/app';
 import 'firebase/firestore';
 import { Comment } from '@material-ui/icons';
 import { Alert } from '@material-ui/lab';
+import { useSetState } from 'react-use';
 
 var otherUserName = 'Test';
 var userLookupAlias = '';
@@ -40,18 +41,9 @@ const useStyles = makeStyles((theme: Theme) => ({
     },
 }));
 
-function onlyAlphabet(inputVal) {
-    var patt = /^[a-zA-Z]+$/;
-    if (patt.test(inputVal)) {
-        return inputVal;
-    } else {
-        var txt = inputVal.slice(0, -1);
-        return txt;
-    }
-}
-
 export default function UserPostMeetingPage() {
     const [userNameAvaialbe, setUserNameAvaialbe] = useState(true);
+    const [userHandle, setUserHandle] = useState('');
     const [helperText, sethelperText] = useState('');
     const [showButton, setShowButton] = useState(false);
     const { firebaseUser } = useAppState();
@@ -62,19 +54,27 @@ export default function UserPostMeetingPage() {
         alert('Email invite@joincoffeebreak.com to get early access to the app!');
     };
 
-    const handleUserNameSearch = (event: ChangeEvent<HTMLInputElement>) => {
-        var temp = onlyAlphabet(event.target.value);
-        event.target.value = temp;
-        userLookupAlias = temp;
+    const handleInput = (event: ChangeEvent<HTMLInputElement>) => {
+        var patt = /^[0-9a-zA-Z][\b]+$/;
+        var temp = event.target.value;
+        const isValid = /^[0-9a-zA-Z]+$/.test(temp);
 
-        if (event.target.value.length == 0) {
+        if (isValid || temp === '') {
+            setUserHandle(temp);
+            handleUserNameSearch(temp);
+        }
+    };
+
+    const handleUserNameSearch = (val: String) => {
+        if (val.length == 0) {
             setUserNameAvaialbe(true);
             sethelperText('');
             setShowButton(false);
+
             return;
         }
 
-        checkIfUsernameAvailable(userLookupAlias);
+        checkIfUsernameAvailable(val);
     };
 
     window.onbeforeunload = event => {
@@ -124,29 +124,26 @@ export default function UserPostMeetingPage() {
             });
     }
 
-    function checkIfUsernameAvailable(usernameToCheck: string) {
+    function checkIfUsernameAvailable(val: String) {
         try {
+            console.log('checking: ', '@' + val.toLocaleLowerCase());
             const docRef = firebase
                 .firestore()
-                .collection('users')
-                .where('userHandle', '==', usernameToCheck.toLocaleLowerCase())
-                .get()
-                .then(querySnapshot => {
-                    querySnapshot.forEach(doc => {
-                        if (doc.exists) {
-                            setUserNameAvaialbe(false);
-                            sethelperText('Username is not available!');
-                            setShowButton(false);
-                        } else {
-                            setUserNameAvaialbe(true);
-                            sethelperText('Username is available!');
-                            setShowButton(true);
-                        }
-                    });
-                })
-                .catch((error: any) => {
-                    console.log('Error getting documents: ', error);
-                });
+                .collection('userNames')
+                .doc('@' + val.toLocaleLowerCase());
+
+            docRef.get().then(doc => {
+                if (doc.exists) {
+                    setUserNameAvaialbe(false);
+                    sethelperText('Username is not available!');
+                    setShowButton(false);
+                } else {
+                    setUserHandle(val);
+                    setUserNameAvaialbe(true);
+                    sethelperText('Username is available!');
+                    setShowButton(true);
+                }
+            });
         } catch (error) {
             console.log(error);
         }
@@ -164,7 +161,7 @@ export default function UserPostMeetingPage() {
         return (
             <IntroContainer>
                 <Typography variant="h5" className={classes.content}>
-                    Congratulations on a successful coffeeBreak!
+                    Congratulations on your coffeeBreak!
                 </Typography>
                 <p></p>
                 <Typography variant="h6" className={classes.content}>
@@ -185,8 +182,9 @@ export default function UserPostMeetingPage() {
                                 id="outlined-error-helper-text"
                                 placeholder="You preferred username"
                                 helperText={helperText}
-                                onChange={handleUserNameSearch}
+                                onChange={handleInput}
                                 variant="outlined"
+                                value={userHandle}
                             />
                         </div>
 
